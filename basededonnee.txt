@@ -1,0 +1,537 @@
+-- Script de création de la base de données (MySQL / MariaDB)
+-- Usage: exécuter dans un schéma vide. Ajuste le nom de la base si besoin.
+
+SET @OLD_SQL_MODE=@@SQL_MODE;
+SET SQL_MODE='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION';
+
+CREATE DATABASE IF NOT EXISTS universite DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE universite;
+
+-- MODULE 0 : Base & utilisateurs communs
+
+CREATE TABLE etudiants (
+  id_etudiant INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  matricule VARCHAR(20) UNIQUE NULL,
+  nom VARCHAR(50) NOT NULL,
+  prenom VARCHAR(50) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  mot_de_passe VARCHAR(255) NOT NULL,
+  photo VARCHAR(255) NULL,
+  promotion VARCHAR(50) NULL,
+  filiere VARCHAR(100) NULL,
+  telephone VARCHAR(30) NULL,
+  date_inscription DATE NOT NULL DEFAULT (CURRENT_DATE),
+  statut ENUM('actif','inactif') NOT NULL DEFAULT 'actif',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_etudiant)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE administrateurs (
+  id_admin INT NOT NULL AUTO_INCREMENT,
+  nom VARCHAR(50) NOT NULL,
+  prenom VARCHAR(50) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  mot_de_passe VARCHAR(255) NOT NULL,
+  role ENUM('super_admin','administration','bureau') NOT NULL DEFAULT 'administration',
+  date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_admin)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE academic_years (
+  id INT NOT NULL AUTO_INCREMENT,
+  label VARCHAR(20) NOT NULL UNIQUE,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  is_current TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- MODULE 1 : Résultats académiques
+
+CREATE TABLE semesters (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  code VARCHAR(10) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY ux_semesters_code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE ues (
+  id INT NOT NULL AUTO_INCREMENT,
+  code VARCHAR(50) NULL,
+  name VARCHAR(191) NOT NULL,
+  coefficient DECIMAL(6,2) NOT NULL DEFAULT 1.00,
+  description TEXT NULL,
+  PRIMARY KEY (id),
+  INDEX idx_ues_code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE matieres (
+  id_matiere INT NOT NULL AUTO_INCREMENT,
+  code_matiere VARCHAR(20) NOT NULL UNIQUE,
+  nom_matiere VARCHAR(100) NOT NULL,
+  ue_id INT NULL,
+  semestre_id INT NULL,
+  filiere VARCHAR(100) NULL,
+  coefficient DECIMAL(6,2) NOT NULL DEFAULT 1.00,
+  PRIMARY KEY (id_matiere),
+  INDEX idx_matieres_ue (ue_id),
+  INDEX idx_matieres_semestre (semestre_id),
+  CONSTRAINT fk_matieres_ue FOREIGN KEY (ue_id) REFERENCES ues(id) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_matieres_semestre FOREIGN KEY (semestre_id) REFERENCES semesters(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE resultats (
+  id_resultat INT NOT NULL AUTO_INCREMENT,
+  id_etudiant INT NOT NULL,
+  id_matiere INT NOT NULL,
+  note DECIMAL(5,2) NOT NULL,
+  academic_year_id INT NOT NULL,
+  semester_id INT NOT NULL,
+  date_saisie DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  saisie_par INT NULL, -- administrateur qui a saisi la note
+  PRIMARY KEY (id_resultat),
+  INDEX idx_resultats_etudiant (id_etudiant),
+  INDEX idx_resultats_matiere (id_matiere),
+  INDEX idx_resultats_academic_year (academic_year_id),
+  INDEX idx_resultats_semester (semester_id),
+  CONSTRAINT fk_resultats_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_resultats_matiere FOREIGN KEY (id_matiere) REFERENCES matieres(id_matiere) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_resultats_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_resultats_semester FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_resultats_saisie_par FOREIGN KEY (saisie_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE student_subject_averages (
+  id INT NOT NULL AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  subject_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  semester_id INT NOT NULL,
+  average DECIMAL(6,3) NOT NULL,
+  computed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_ssa_student (student_id),
+  INDEX idx_ssa_subject (subject_id),
+  CONSTRAINT fk_ssa_student FOREIGN KEY (student_id) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_ssa_subject FOREIGN KEY (subject_id) REFERENCES matieres(id_matiere) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_ssa_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_ssa_semester FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE student_ue_averages (
+  id INT NOT NULL AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  ue_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  semester_id INT NOT NULL,
+  average DECIMAL(6,3) NOT NULL,
+  computed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_sua_student (student_id),
+  INDEX idx_sua_ue (ue_id),
+  CONSTRAINT fk_sua_student FOREIGN KEY (student_id) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_sua_ue FOREIGN KEY (ue_id) REFERENCES ues(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_sua_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_sua_semester FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE student_semester_averages (
+  id INT NOT NULL AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  semester_id INT NOT NULL,
+  average_gpa DECIMAL(6,3) NOT NULL,
+  computed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_ssa2_student (student_id),
+  CONSTRAINT fk_ssa2_student FOREIGN KEY (student_id) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_ssa2_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_ssa2_semester FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE student_year_averages (
+  id INT NOT NULL AUTO_INCREMENT,
+  student_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  average DECIMAL(6,3) NOT NULL,
+  mention VARCHAR(50) NULL,
+  computed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_sya_student (student_id),
+  CONSTRAINT fk_sya_student FOREIGN KEY (student_id) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_sya_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- MODULE 2 : Activités & événements
+
+CREATE TABLE activites (
+  id_activite INT NOT NULL AUTO_INCREMENT,
+  nom_activite VARCHAR(100) NOT NULL,
+  description TEXT NULL,
+  conditions TEXT NULL,
+  academic_year_id INT NOT NULL,
+  date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  cree_par INT NULL,
+  PRIMARY KEY (id_activite),
+  INDEX idx_activites_academic_year (academic_year_id),
+  CONSTRAINT fk_activites_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_activites_cree_par FOREIGN KEY (cree_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE evenements (
+  id_evenement INT NOT NULL AUTO_INCREMENT,
+  nom_evenement VARCHAR(150) NOT NULL,
+  type_evenement ENUM('sortie','soiree','concert','competition','autre') NOT NULL DEFAULT 'autre',
+  description TEXT NULL,
+  event_start DATETIME NOT NULL,
+  lieu VARCHAR(255) NULL,
+  prix_ticket DECIMAL(10,2) NULL DEFAULT 0.00,
+  academic_year_id INT NOT NULL,
+  cree_par INT NULL,
+  is_public TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_evenement),
+  INDEX idx_evenements_academic_year (academic_year_id),
+  CONSTRAINT fk_evenements_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_evenements_cree_par FOREIGN KEY (cree_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE external_participants (
+  Id INT NOT NULL AUTO_INCREMENT,
+  full_name VARCHAR(200) NOT NULL,
+  email VARCHAR(150) NULL,
+  phone VARCHAR(50) NULL,
+  id_type VARCHAR(50) NULL,
+  id_number VARCHAR(100) NULL,
+  PRIMARY KEY (Id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE tickets (
+  id_ticket INT NOT NULL AUTO_INCREMENT,
+  event_id INT NOT NULL,
+  user_id INT NULL, -- etudiant
+  external_participant_id INT NULL,
+  code_ticket VARCHAR(100) NOT NULL UNIQUE,
+  ticket_pdf_path VARCHAR(255) NULL,
+  statut ENUM('reserve','paye','annule','rembourse') NOT NULL DEFAULT 'reserve',
+  amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  is_checked_in TINYINT(1) NOT NULL DEFAULT 0,
+  checked_in_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_ticket),
+  INDEX idx_tickets_event (event_id),
+  INDEX idx_tickets_user (user_id),
+  INDEX idx_tickets_external (external_participant_id),
+  CONSTRAINT fk_tickets_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_tickets_user FOREIGN KEY (user_id) REFERENCES etudiants(id_etudiant) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_tickets_external FOREIGN KEY (external_participant_id) REFERENCES external_participants(Id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE participants_evenements (
+  id_participation INT NOT NULL AUTO_INCREMENT,
+  event_id INT NOT NULL,
+  user_id INT NULL,
+  external_participant_id INT NULL,
+  ticket_id INT NULL,
+  statut ENUM('reserve','paye','present','absent') NOT NULL DEFAULT 'reserve',
+  date_participation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  is_checked_in TINYINT(1) NOT NULL DEFAULT 0,
+  entered_at DATETIME NULL,
+  PRIMARY KEY (id_participation),
+  INDEX idx_part_evt (event_id),
+  INDEX idx_part_user (user_id),
+  INDEX idx_part_external (external_participant_id),
+  INDEX idx_part_ticket (ticket_id),
+  CONSTRAINT fk_participants_evenements_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_participants_evenements_user FOREIGN KEY (user_id) REFERENCES etudiants(id_etudiant) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_participants_evenements_external FOREIGN KEY (external_participant_id) REFERENCES external_participants(Id) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_participants_evenements_ticket FOREIGN KEY (ticket_id) REFERENCES tickets(id_ticket) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE inscriptions_activites (
+  id_inscription INT NOT NULL AUTO_INCREMENT,
+  id_activite INT NOT NULL,
+  id_etudiant INT NOT NULL,
+  date_inscription DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  statut ENUM('en_attente','acceptee','refusee') NOT NULL DEFAULT 'en_attente',
+  motif_refus TEXT NULL,
+  PRIMARY KEY (id_inscription),
+  INDEX idx_ins_act (id_activite),
+  INDEX idx_ins_etud (id_etudiant),
+  CONSTRAINT fk_inscriptions_activites_activite FOREIGN KEY (id_activite) REFERENCES activites(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_inscriptions_activites_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE participants_activites (
+  id_participation INT NOT NULL AUTO_INCREMENT,
+  id_activite INT NOT NULL,
+  id_etudiant INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  role VARCHAR(100) NULL,
+  statut ENUM('actif','abandonné','terminé') NOT NULL DEFAULT 'actif',
+  performance VARCHAR(255) NULL,
+  PRIMARY KEY (id_participation),
+  INDEX idx_pa_activite (id_activite),
+  INDEX idx_pa_etudiant (id_etudiant),
+  CONSTRAINT fk_participants_activites_activite FOREIGN KEY (id_activite) REFERENCES activites(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_participants_activites_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_participants_activites_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE galerie (
+  id_media INT NOT NULL AUTO_INCREMENT,
+  event_id INT NULL,
+  activity_id INT NULL,
+  file_path VARCHAR(255) NOT NULL,
+  file_type ENUM('image','video') NOT NULL DEFAULT 'image',
+  caption VARCHAR(255) NULL,
+  uploaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_media),
+  INDEX idx_galerie_event (event_id),
+  INDEX idx_galerie_activity (activity_id),
+  CONSTRAINT fk_galerie_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_galerie_activity FOREIGN KEY (activity_id) REFERENCES activites(id_activite) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE commentaires (
+  id_commentaire INT NOT NULL AUTO_INCREMENT,
+  activity_id INT NULL,
+  event_id INT NULL,
+  id_etudiant INT NOT NULL,
+  message TEXT NOT NULL,
+  note TINYINT NULL,
+  date_commentaire DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_commentaire),
+  INDEX idx_comment_activity (activity_id),
+  INDEX idx_comment_event (event_id),
+  INDEX idx_comment_etudiant (id_etudiant),
+  CONSTRAINT fk_commentaires_activity FOREIGN KEY (activity_id) REFERENCES activites(id_activite) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_commentaires_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_commentaires_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- MODULE 3 : Football
+
+CREATE TABLE football_teams (
+  team_id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(150) NOT NULL,
+  coach VARCHAR(150) NULL,
+  academic_year_id INT NOT NULL,
+  created_by INT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (team_id),
+  CONSTRAINT fk_football_teams_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_football_teams_created_by FOREIGN KEY (created_by) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE football_players (
+  player_id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NULL, -- référence à etudiants
+  external_name VARCHAR(191) NULL,
+  position VARCHAR(50) NULL,
+  shirt_number INT NULL,
+  team_id INT NOT NULL,
+  is_captain TINYINT(1) NOT NULL DEFAULT 0,
+  joined_at DATE NULL,
+  left_at DATE NULL,
+  academic_year_id INT NOT NULL,
+  PRIMARY KEY (player_id),
+  INDEX idx_players_user (user_id),
+  INDEX idx_players_team (team_id),
+  CONSTRAINT fk_football_players_user FOREIGN KEY (user_id) REFERENCES etudiants(id_etudiant) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_football_players_team FOREIGN KEY (team_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_football_players_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE pools (
+  pool_id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  event_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (pool_id),
+  CONSTRAINT fk_pools_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_pools_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE pool_teams (
+  id INT NOT NULL AUTO_INCREMENT,
+  pool_id INT NOT NULL,
+  team_id INT NOT NULL,
+  points INT NOT NULL DEFAULT 0,
+  won INT NOT NULL DEFAULT 0,
+  drawn INT NOT NULL DEFAULT 0,
+  lost INT NOT NULL DEFAULT 0,
+  goals_for INT NOT NULL DEFAULT 0,
+  goals_against INT NOT NULL DEFAULT 0,
+  academic_year_id INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_pool_teams_pool (pool_id),
+  INDEX idx_pool_teams_team (team_id),
+  CONSTRAINT fk_pool_teams_pool FOREIGN KEY (pool_id) REFERENCES pools(pool_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_pool_teams_team FOREIGN KEY (team_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_pool_teams_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE matches (
+  match_id INT NOT NULL AUTO_INCREMENT,
+  event_id INT NOT NULL,
+  pool_id INT NULL,
+  team1_id INT NOT NULL,
+  team2_id INT NOT NULL,
+  stage ENUM('group','quarter','semi','final','third_place') NOT NULL DEFAULT 'group',
+  match_datetime DATETIME NOT NULL,
+  location VARCHAR(255) NULL,
+  score_team1 SMALLINT NULL,
+  score_team2 SMALLINT NULL,
+  winner_team_id INT NULL,
+  is_played TINYINT(1) NOT NULL DEFAULT 0,
+  academic_year_id INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (match_id),
+  INDEX idx_matches_event (event_id),
+  INDEX idx_matches_pool (pool_id),
+  INDEX idx_matches_team1 (team1_id),
+  INDEX idx_matches_team2 (team2_id),
+  CONSTRAINT fk_matches_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_matches_pool FOREIGN KEY (pool_id) REFERENCES pools(pool_id) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_matches_team1 FOREIGN KEY (team1_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_matches_team2 FOREIGN KEY (team2_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_matches_winner FOREIGN KEY (winner_team_id) REFERENCES football_teams(team_id) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_matches_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE match_finale (
+  id INT NOT NULL AUTO_INCREMENT,
+  event_id INT NOT NULL,
+  match_id INT NOT NULL,
+  champion_team_id INT NOT NULL,
+  runner_up_team_id INT NOT NULL,
+  academic_year_id INT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  CONSTRAINT fk_match_finale_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_match_finale_match FOREIGN KEY (match_id) REFERENCES matches(match_id) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_match_finale_champion FOREIGN KEY (champion_team_id) REFERENCES football_teams(team_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_match_finale_runnerup FOREIGN KEY (runner_up_team_id) REFERENCES football_teams(team_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_match_finale_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- MODULE 4 : Notifications & Divers
+
+CREATE TABLE notifications (
+  id_notification INT NOT NULL AUTO_INCREMENT,
+  -- destinataire: soit etudiant, soit administrateur (stockés séparément pour garder FK)
+  etudiant_id INT NULL,
+  admin_id INT NULL,
+  type ENUM('inscription','resultat','evenement','ticket') NOT NULL,
+  title VARCHAR(191) NOT NULL,
+  message TEXT NOT NULL,
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_notification),
+  INDEX idx_notifications_etudiant (etudiant_id),
+  INDEX idx_notifications_admin (admin_id),
+  CONSTRAINT fk_notifications_etudiant FOREIGN KEY (etudiant_id) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_notifications_admin FOREIGN KEY (admin_id) REFERENCES administrateurs(id_admin) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE points (
+  id_point INT NOT NULL AUTO_INCREMENT,
+  id_etudiant INT NOT NULL,
+  points INT NOT NULL DEFAULT 0,
+  motif VARCHAR(200) NULL,
+  date_attribution DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_point),
+  INDEX idx_points_etudiant (id_etudiant),
+  CONSTRAINT fk_points_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE export_logs (
+  id INT NOT NULL AUTO_INCREMENT,
+  -- utilisateur: soit etudiant soit admin (conservés séparément)
+  etudiant_id INT NULL,
+  admin_id INT NULL,
+  type ENUM('csv','pdf') NOT NULL,
+  description VARCHAR(255) NULL,
+  file_path VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  INDEX idx_exportlogs_etudiant (etudiant_id),
+  INDEX idx_exportlogs_admin (admin_id),
+  CONSTRAINT fk_exportlogs_etudiant FOREIGN KEY (etudiant_id) REFERENCES etudiants(id_etudiant) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_exportlogs_admin FOREIGN KEY (admin_id) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- MODULE 5 : Recueil d’Épreuves
+
+CREATE TABLE epreuves_categories (
+  id_category INT NOT NULL AUTO_INCREMENT,
+  nom_category VARCHAR(100) NOT NULL,
+  Description TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_by INT NULL,
+  PRIMARY KEY (id_category),
+  CONSTRAINT fk_epreuves_categories_created_by FOREIGN KEY (created_by) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE epreuves (
+  id_epreuve INT NOT NULL AUTO_INCREMENT,
+  Titre VARCHAR(191) NOT NULL,
+  description TEXT NULL,
+  file_path VARCHAR(255) NOT NULL,
+  id_category INT NOT NULL,
+  id_matiere INT NULL,
+  Filiere VARCHAR(100) NULL,
+  academic_year_id INT NOT NULL,
+  universite VARCHAR(150) NULL,
+  Pays VARCHAR(100) NULL,
+  Niveau ENUM('1ère année','2ème année','3ème année','autre') NOT NULL DEFAULT 'autre',
+  date_ajout DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ajoute_par INT NULL,
+  is_public TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id_epreuve),
+  INDEX idx_epreuves_category (id_category),
+  INDEX idx_epreuves_matiere (id_matiere),
+  INDEX idx_epreuves_academic_year (academic_year_id),
+  CONSTRAINT fk_epreuves_category FOREIGN KEY (id_category) REFERENCES epreuves_categories(id_category) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_epreuves_matiere FOREIGN KEY (id_matiere) REFERENCES matieres(id_matiere) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_epreuves_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_epreuves_ajoute_par FOREIGN KEY (ajoute_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE epreuves_downloads (
+  id_download INT NOT NULL AUTO_INCREMENT,
+  id_epreuve INT NOT NULL,
+  id_etudiant INT NOT NULL,
+  date_download DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ip_adresse VARCHAR(45) NULL,
+  Device VARCHAR(100) NULL,
+  PRIMARY KEY (id_download),
+  INDEX idx_epld_epreuve (id_epreuve),
+  INDEX idx_epld_etudiant (id_etudiant),
+  CONSTRAINT fk_epreuves_downloads_epreuve FOREIGN KEY (id_epreuve) REFERENCES epreuves(id_epreuve) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_epreuves_downloads_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE epreuves_comments (
+  id_commentaire INT NOT NULL AUTO_INCREMENT,
+  id_epreuve INT NOT NULL,
+  id_etudiant INT NOT NULL,
+  Message TEXT NOT NULL,
+  Note TINYINT NULL,
+  date_commentaire DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_commentaire),
+  INDEX idx_ec_epreuve (id_epreuve),
+  INDEX idx_ec_etudiant (id_etudiant),
+  CONSTRAINT fk_epreuves_comments_epreuve FOREIGN KEY (id_epreuve) REFERENCES epreuves(id_epreuve) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_epreuves_comments_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Indexes additionnels et vues potentielles peuvent être ajoutés selon besoins.
+
+-- Restaurer SQL mode précédent
+SET SQL_MODE=@OLD_SQL_MODE;
