@@ -1,0 +1,107 @@
+:root {
+  /* === Couleurs Principales === */
+  --color-primary-1: #080020;  /* Bleu nuit scolaire */
+  --color-primary-2: #00796B;  /* Orange foncé vibrant */
+
+  /* === Couleurs Secondaires === */
+  --color-secondary-1: #FFC107;  /* Jaune doré (accent) */
+  --color-secondary-2: #3A3A3A;  /* Gris foncé élégant */
+
+  /* === Couleurs de Fond === */
+  --bg-light: #F5F5F5;    /* Fond principal clair */
+  --bg-dark: #1E1E1E;     /* Fond secondaire sombre */
+
+  /* === Rôles Utilisateurs === */
+  --color-admin: #2196F3;   /* Bleu roi */
+  --color-parent: #4CAF50;  /* Vert menthe */
+  --color-teacher: #9C27B0; /* Violet doux */
+
+  /* === Couleurs Utilitaires === */
+  --color-success: #4CAF50;   /* Validation / succès */
+  --color-error: #F44336;     /* Erreur / danger */
+  --color-info: #03A9F4;      /* Informations */
+  --text-main: #212121;       /* Texte principal */
+  --text-muted: #757575;      /* Texte secondaire */
+  --border-color: #E0E0E0;    /* Bordures légères */
+
+  /* === Sidebar spécifiques === */
+  --admin-sidebar-bg: var(--color-primary-1);       /* Bleu nuit pour fond sidebar */
+  --admin-text-color: #fff;                         /* Texte blanc */
+  --admin-active-bg: var(--color-primary-2);       /* Orange foncé vibrant pour actif */
+  --admin-border-color: var(--color-secondary-1);  /* Jaune doré pour bordure active */
+}
+
+.sidebar-admin {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  height: calc(100vh - 60px);
+  width: 220px;
+  background-color: var(--admin-sidebar-bg);
+  color: var(--admin-text-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+.sidebar-admin.closed {
+  width: 10px;
+}
+
+.sidebar-admin-header {
+  text-align: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-admin-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sidebar-admin-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-admin-item {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background-color 0.2s ease;
+  color: white;
+  gap: 1rem;
+  white-space: nowrap;
+}
+
+.sidebar-admin-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-admin-item.active {
+  background-color: var(--admin-active-bg);
+  font-weight: bold;
+  border-left: 4px solid var(--admin-border-color);
+}
+
+.sidebar-admin-icon {
+  font-size: 1.1rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+.sidebar-admin.closed .sidebar-admin-label {
+  display: none;
+}
+
+.sidebar-admin-label {
+  transition: opacity 0.2s ease;
+  flex: 1;
+}
