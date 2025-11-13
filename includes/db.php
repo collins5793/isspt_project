@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
 $user = "root";
-$pass = "Collins.Chado03";
+$pass = "";
 $dbname = "isspt_project";
 
 try {
