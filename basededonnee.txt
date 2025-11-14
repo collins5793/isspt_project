@@ -64,6 +64,18 @@ CREATE TABLE academic_years (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE actualites (
+    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_admin INT UNSIGNED NOT NULL,              -- L'administrateur (souvent président) qui publie
+    id_academic_year INT UNSIGNED NOT NULL,      -- L'année académique de l'actualité
+    titre VARCHAR(255) NOT NULL,                 -- Titre de l'actualité
+    contenu TEXT NOT NULL,                       -- Contenu de l'actualité
+    mot_du_president TEXT NULL,                  -- Message personnel du président
+    date_publication DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Date de publication
+    PRIMARY KEY (id),
+    FOREIGN KEY (id_admin) REFERENCES administrateurs(id_admin) ON DELETE CASCADE,
+    FOREIGN KEY (id_academic_year) REFERENCES academic_years(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- =============================================
 -- MODULE 1 : RESULTATS ACADEMIQUES
 -- =============================================
@@ -560,26 +572,6 @@ CREATE TABLE epreuves_comments (
   CONSTRAINT fk_epreuves_comments_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Table des filières
-CREATE TABLE filieres (
-    id_filiere INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    nom_filiere VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_filiere)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Table des matiere_epreuves
-CREATE TABLE matiere_epreuves (
-    id_matiere INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    nom_matiere VARCHAR(100) NOT NULL,
-    id_filiere INT UNSIGNED NOT NULL,
-    description TEXT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id_matiere),
-    INDEX idx_matieres_filiere (id_filiere),
-    CONSTRAINT fk_matieres_filiere FOREIGN KEY (id_filiere) 
-        REFERENCES filieres(id_filiere)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+base de donnée 
