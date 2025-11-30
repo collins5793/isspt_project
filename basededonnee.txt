@@ -335,128 +335,396 @@ CREATE TABLE commentaires (
   id_commentaire INT UNSIGNED NOT NULL AUTO_INCREMENT,
   activity_id INT UNSIGNED NULL,
   event_id INT UNSIGNED NULL,
-  id_etudiant INT UNSIGNED NOT NULL,
+  id_etudiant INT UNSIGNED NULL,
+  id_admin INT UNSIGNED NULL,
   message TEXT NOT NULL,
   note TINYINT NULL,
+  user_type ENUM('etudiant','admin') NOT NULL DEFAULT 'etudiant',
   date_commentaire DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id_commentaire),
   INDEX idx_comment_activity (activity_id),
   INDEX idx_comment_event (event_id),
   INDEX idx_comment_etudiant (id_etudiant),
+  INDEX idx_comment_admin (id_admin),
   CONSTRAINT fk_commentaires_activity FOREIGN KEY (activity_id) REFERENCES activites(id_activite) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT fk_commentaires_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT fk_commentaires_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT fk_commentaires_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_commentaires_admin FOREIGN KEY (id_admin) REFERENCES administrateurs(id_admin) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE commentaire_football (
+  id_commentaire_football INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_etudiant INT UNSIGNED NULL,
+  id_admin INT UNSIGNED NULL,
+  message TEXT NOT NULL,
+  note TINYINT NULL,
+  user_type ENUM('etudiant','admin') NOT NULL DEFAULT 'etudiant',
+  date_commentaire_football DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_commentaire_football),
+  INDEX idx_commentaire_football_etudiant (id_etudiant),
+  INDEX idx_commentaire_football_admin (id_admin),
+  CONSTRAINT fk_commentaire_football_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_commentaire_football_admin FOREIGN KEY (id_admin) REFERENCES administrateurs(id_admin) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- Table Artistes invités à un événement
+CREATE TABLE evenement_artistes (
+    id_evenement INT UNSIGNED NOT NULL,
+    nom_artiste VARCHAR(100) NOT NULL,
+    pseudonyme VARCHAR(100) NULL,
+    description TEXT NULL,
+    photo VARCHAR(255) NULL,
+    role VARCHAR(100) NULL,
+    PRIMARY KEY (id_evenement, nom_artiste),
+    FOREIGN KEY (id_evenement) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 -- =============================================
 -- MODULE 3 : FOOTBALL
 -- =============================================
+CREATE TABLE football_seasons (
+  id_season INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  label VARCHAR(100) NOT NULL,
+  academic_year_id INT UNSIGNED NOT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 0,
+  created_by INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL,
+  PRIMARY KEY (id_season),
+
+  FOREIGN KEY (academic_year_id)
+    REFERENCES academic_years(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+
+  FOREIGN KEY (created_by)
+    REFERENCES administrateurs(id_admin)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE football_teams (
   team_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  season_id INT UNSIGNED NOT NULL,
   name VARCHAR(150) NOT NULL,
+  short_code VARCHAR(10) NULL,
   coach VARCHAR(150) NULL,
-  academic_year_id INT UNSIGNED NOT NULL,
+  status ENUM('active','withdrawn') NOT NULL DEFAULT 'active',
   created_by INT UNSIGNED NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL,
   PRIMARY KEY (team_id),
-  CONSTRAINT fk_football_teams_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_football_teams_created_by FOREIGN KEY (created_by) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (created_by)
+    REFERENCES administrateurs(id_admin)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE football_players (
+
+CREATE TABLE team_players (
   player_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id INT UNSIGNED NULL, -- référence à etudiants
-  external_name VARCHAR(191) NULL,
+  team_id INT UNSIGNED NOT NULL,
+  season_id INT UNSIGNED NOT NULL,
+  user_id INT UNSIGNED NULL,
+  full_name VARCHAR(191) NULL,
   position VARCHAR(50) NULL,
   shirt_number INT NULL,
-  team_id INT UNSIGNED NOT NULL,
   is_captain TINYINT(1) NOT NULL DEFAULT 0,
   joined_at DATE NULL,
   left_at DATE NULL,
-  academic_year_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (player_id),
-  INDEX idx_players_user (user_id),
-  INDEX idx_players_team (team_id),
-  CONSTRAINT fk_football_players_user FOREIGN KEY (user_id) REFERENCES etudiants(id_etudiant) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT fk_football_players_team FOREIGN KEY (team_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_football_players_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+  UNIQUE KEY unique_player_season (season_id, user_id),
+  UNIQUE KEY unique_shirt_number (team_id, shirt_number),
+
+  FOREIGN KEY (user_id)
+    REFERENCES etudiants(id_etudiant)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+
+  FOREIGN KEY (team_id)
+    REFERENCES football_teams(team_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 CREATE TABLE pools (
   pool_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  season_id INT UNSIGNED NOT NULL,
   name VARCHAR(50) NOT NULL,
-  event_id INT UNSIGNED NOT NULL,
-  academic_year_id INT UNSIGNED NOT NULL,
+  advance_count INT UNSIGNED NOT NULL DEFAULT 2,
+  is_published TINYINT(1) NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL,
   PRIMARY KEY (pool_id),
-  CONSTRAINT fk_pools_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_pools_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 CREATE TABLE pool_teams (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   pool_id INT UNSIGNED NOT NULL,
   team_id INT UNSIGNED NOT NULL,
+  season_id INT UNSIGNED NOT NULL,
+  joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   points INT NOT NULL DEFAULT 0,
+  played INT NOT NULL DEFAULT 0,
   won INT NOT NULL DEFAULT 0,
   drawn INT NOT NULL DEFAULT 0,
   lost INT NOT NULL DEFAULT 0,
   goals_for INT NOT NULL DEFAULT 0,
   goals_against INT NOT NULL DEFAULT 0,
-  academic_year_id INT UNSIGNED NOT NULL,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
   PRIMARY KEY (id),
-  INDEX idx_pool_teams_pool (pool_id),
-  INDEX idx_pool_teams_team (team_id),
-  CONSTRAINT fk_pool_teams_pool FOREIGN KEY (pool_id) REFERENCES pools(pool_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_pool_teams_team FOREIGN KEY (team_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_pool_teams_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+  UNIQUE KEY unique_team_per_season (team_id, season_id),
+
+  FOREIGN KEY (pool_id)
+    REFERENCES pools(pool_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (team_id)
+    REFERENCES football_teams(team_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 CREATE TABLE matches (
   match_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  event_id INT UNSIGNED NOT NULL,
+  season_id INT UNSIGNED NOT NULL,
   pool_id INT UNSIGNED NULL,
+
   team1_id INT UNSIGNED NOT NULL,
   team2_id INT UNSIGNED NOT NULL,
-  stage ENUM('group','quarter','semi','final','third_place') NOT NULL DEFAULT 'group',
-  match_datetime DATETIME NOT NULL,
+
+  stage ENUM('group','quarter','semi','final','third_place')
+        NOT NULL DEFAULT 'group',
+
+  round_number TINYINT UNSIGNED NOT NULL DEFAULT 1,
+
+  match_datetime DATETIME NULL,
   location VARCHAR(255) NULL,
+
   score_team1 SMALLINT NULL,
   score_team2 SMALLINT NULL,
   winner_team_id INT UNSIGNED NULL,
   is_played TINYINT(1) NOT NULL DEFAULT 0,
-  academic_year_id INT UNSIGNED NOT NULL,
+  is_published TINYINT(1) NOT NULL DEFAULT 0,
+
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL,
+
   PRIMARY KEY (match_id),
-  INDEX idx_matches_event (event_id),
-  INDEX idx_matches_pool (pool_id),
-  INDEX idx_matches_team1 (team1_id),
-  INDEX idx_matches_team2 (team2_id),
-  CONSTRAINT fk_matches_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_matches_pool FOREIGN KEY (pool_id) REFERENCES pools(pool_id) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT fk_matches_team1 FOREIGN KEY (team1_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_matches_team2 FOREIGN KEY (team2_id) REFERENCES football_teams(team_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_matches_winner FOREIGN KEY (winner_team_id) REFERENCES football_teams(team_id) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT fk_matches_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+  
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (pool_id)
+    REFERENCES pools(pool_id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+
+  FOREIGN KEY (team1_id)
+    REFERENCES football_teams(team_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (team2_id)
+    REFERENCES football_teams(team_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (winner_team_id)
+    REFERENCES football_teams(team_id)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE match_results_history (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  match_id INT UNSIGNED NOT NULL,
+  old_score_team1 SMALLINT NULL,
+  old_score_team2 SMALLINT NULL,
+  new_score_team1 SMALLINT NULL,
+  new_score_team2 SMALLINT NULL,
+  changed_by INT UNSIGNED NOT NULL,
+  reason VARCHAR(255) NULL,
+  changed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+
+  FOREIGN KEY (match_id)
+    REFERENCES matches(match_id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  FOREIGN KEY (changed_by)
+    REFERENCES administrateurs(id_admin)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 
 CREATE TABLE match_finale (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  event_id INT UNSIGNED NOT NULL,
+  season_id INT UNSIGNED NOT NULL,
   match_id INT UNSIGNED NOT NULL,
   champion_team_id INT UNSIGNED NOT NULL,
   runner_up_team_id INT UNSIGNED NOT NULL,
-  academic_year_id INT UNSIGNED NOT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  CONSTRAINT fk_match_finale_event FOREIGN KEY (event_id) REFERENCES evenements(id_evenement) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_match_finale_match FOREIGN KEY (match_id) REFERENCES matches(match_id) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_match_finale_champion FOREIGN KEY (champion_team_id) REFERENCES football_teams(team_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_match_finale_runnerup FOREIGN KEY (runner_up_team_id) REFERENCES football_teams(team_id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_match_finale_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season),
+
+  FOREIGN KEY (match_id)
+    REFERENCES matches(match_id),
+
+  FOREIGN KEY (champion_team_id)
+    REFERENCES football_teams(team_id),
+
+  FOREIGN KEY (runner_up_team_id)
+    REFERENCES football_teams(team_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE season_settings (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  season_id INT UNSIGNED NOT NULL,
+  match_type ENUM('simple','aller_retour','custom') NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+
+  FOREIGN KEY (season_id)
+    REFERENCES football_seasons(id_season)
+) ENGINE=InnoDB;
+
+CREATE TABLE match_goals (
+    goal_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    match_id INT UNSIGNED NOT NULL,
+    season_id INT UNSIGNED NOT NULL,
+    team_id INT UNSIGNED NOT NULL,
+    player_id INT UNSIGNED NULL,  -- étudiant (optionnel si joueur invité)
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (goal_id),
+
+    FOREIGN KEY (match_id)
+        REFERENCES matches(match_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    FOREIGN KEY (season_id)
+        REFERENCES football_seasons(id_season)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    FOREIGN KEY (team_id)
+        REFERENCES football_teams(team_id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    FOREIGN KEY (player_id)
+        REFERENCES team_players(player_id)
+        ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+
+DROP VIEW IF EXISTS vw_pool_standings;
+
+CREATE VIEW vw_pool_standings AS
+SELECT
+  p.pool_id,
+  p.name AS pool_name,
+  t.team_id,
+  t.name AS team_name,
+  -- Matches joués
+  COUNT(
+    CASE 
+      WHEN m.stage='group' AND (m.team1_id = t.team_id OR m.team2_id = t.team_id)
+      THEN 1 
+    END
+  ) AS played,
+  -- Victoires
+  SUM(
+    CASE
+      WHEN m.stage='group' AND ((m.team1_id = t.team_id AND m.score_team1 > m.score_team2)
+                                OR (m.team2_id = t.team_id AND m.score_team2 > m.score_team1))
+      THEN 1 ELSE 0
+    END
+  ) AS won,
+  -- Matchs nuls
+  SUM(
+    CASE
+      WHEN m.stage='group' AND m.score_team1 IS NOT NULL AND m.score_team2 IS NOT NULL
+           AND ((m.team1_id = t.team_id AND m.score_team1 = m.score_team2)
+                OR (m.team2_id = t.team_id AND m.score_team2 = m.score_team1))
+      THEN 1 ELSE 0
+    END
+  ) AS drawn,
+  -- Défaites
+  SUM(
+    CASE
+      WHEN m.stage='group' AND ((m.team1_id = t.team_id AND m.score_team1 < m.score_team2)
+                                OR (m.team2_id = t.team_id AND m.score_team2 < m.score_team1))
+      THEN 1 ELSE 0
+    END
+  ) AS lost,
+  -- Buts pour
+  SUM(
+    CASE WHEN m.stage='group' AND m.team1_id = t.team_id THEN COALESCE(m.score_team1,0)
+         WHEN m.stage='group' AND m.team2_id = t.team_id THEN COALESCE(m.score_team2,0)
+         ELSE 0 END
+  ) AS goals_for,
+  -- Buts contre
+  SUM(
+    CASE WHEN m.stage='group' AND m.team1_id = t.team_id THEN COALESCE(m.score_team2,0)
+         WHEN m.stage='group' AND m.team2_id = t.team_id THEN COALESCE(m.score_team1,0)
+         ELSE 0 END
+  ) AS goals_against,
+  -- Différence de buts
+  SUM(
+    CASE WHEN m.stage='group' AND m.team1_id = t.team_id THEN COALESCE(m.score_team1,0)
+         WHEN m.stage='group' AND m.team2_id = t.team_id THEN COALESCE(m.score_team2,0)
+         ELSE 0 END
+  ) - SUM(
+    CASE WHEN m.stage='group' AND m.team1_id = t.team_id THEN COALESCE(m.score_team2,0)
+         WHEN m.stage='group' AND m.team2_id = t.team_id THEN COALESCE(m.score_team1,0)
+         ELSE 0 END
+  ) AS goal_diff,
+  -- Points
+  3*SUM(
+    CASE
+      WHEN m.stage='group' AND ((m.team1_id = t.team_id AND m.score_team1 > m.score_team2)
+                                OR (m.team2_id = t.team_id AND m.score_team2 > m.score_team1))
+      THEN 1 ELSE 0
+    END
+  ) + 1*SUM(
+    CASE
+      WHEN m.stage='group' AND m.score_team1 IS NOT NULL AND m.score_team2 IS NOT NULL
+           AND ((m.team1_id = t.team_id AND m.score_team1 = m.score_team2)
+                OR (m.team2_id = t.team_id AND m.score_team2 = m.score_team1))
+      THEN 1 ELSE 0
+    END
+  ) AS points
+FROM pools p
+JOIN pool_teams pt ON pt.pool_id = p.pool_id
+JOIN football_teams t ON t.team_id = pt.team_id
+LEFT JOIN matches m ON m.pool_id = p.pool_id AND (m.team1_id = t.team_id OR m.team2_id = t.team_id)
+GROUP BY p.pool_id, p.name, t.team_id, t.name;
+
+
+
 
 -- =============================================
 -- MODULE 4 : NOTIFICATIONS & DIVERS
