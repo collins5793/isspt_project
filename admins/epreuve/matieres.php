@@ -1,12 +1,7 @@
 <?php
 session_start();
-require_once '../includes/db.php';
+require_once '../../includes/db.php';
 
-// Vérification admin
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header("Location: index.php");
-    exit;
-}
 
 // Suppression
 if (isset($_GET['delete'])) {
@@ -22,18 +17,11 @@ $matieres = $pdo->query("SELECT m.*, f.nom_filiere
                          FROM matiere_epreuves m
                          LEFT JOIN filieres f ON m.id_filiere = f.id_filiere
                          ORDER BY m.nom_matiere")->fetchAll(PDO::FETCH_ASSOC);
+
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>📚 Gestion des matières</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
     <h2>📚 Matières</h2>
     <a href="ajouter_matiere.php" class="btn btn-success mb-3">➕ Ajouter une matière</a>
 
@@ -72,6 +60,8 @@ $matieres = $pdo->query("SELECT m.*, f.nom_filiere
             ?>
         </tbody>
     </table>
-</div>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

@@ -53,22 +53,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':id' => $id
         ]);
 
-        header("Location: liste_annees.php?updated=1");
+        header("Location: annees.php?updated=1");
         exit;
     }
 }
+
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>✏️ Modifier l'année universitaire</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
     <h2 class="mb-4">✏️ Modifier l'année universitaire : <?= htmlspecialchars($label) ?></h2>
 
     <?php if(!empty($errors)): ?>
@@ -97,8 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="btn btn-primary">💾 Mettre à jour</button>
         <a href="liste_annees.php" class="btn btn-secondary">Annuler</a>
     </form>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include 'layout.php';
+?>

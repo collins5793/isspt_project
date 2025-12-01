@@ -12,8 +12,8 @@ if(isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] === 0) {
     $niveau = $_POST['niveau'] ?? 'autre';
     $description = $_POST['description'] ?? '';
 
-    $uploadDir = '../uploads/';
-    $thumbDir = '../uploads/thumbs/';
+    $uploadDir = 'uploads/';
+    $thumbDir = 'uploads/thumbs/';
 
     if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
     if(!is_dir($thumbDir)) mkdir($thumbDir, 0777, true);

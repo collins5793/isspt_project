@@ -29,14 +29,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_id'] = $admin['id_admin'];
             $_SESSION['admin_role'] = $admin['role'];
             $_SESSION['admin_poste'] = $admin['poste_bureau'];
-            header('Location: dashboard_admin.php'); // Tableau de bord admin
+            header('Location: ../admin/dashboard.php'); // Tableau de bord admin
             exit;
         } else {
             $_SESSION['etudiant_id'] = $etudiant['id_etudiant'];
             $_SESSION['etudiant_nom'] = $etudiant['nom'];
             $_SESSION['etudiant_prenom'] = $etudiant['prenom'];
             // Connexion simple étudiant
-            header('Location: tableau_bord.php'); // Tableau de bord étudiant
+            header('Location: index.php'); // Tableau de bord étudiant
             exit;
         }
 

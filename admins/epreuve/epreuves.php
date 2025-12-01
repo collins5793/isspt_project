@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db.php'; // connexion PDO
+require_once '../../includes/db.php'; // connexion PDO
 
 // --- Traitement des filtres et recherche ---
 $search = $_GET['search'] ?? '';
@@ -54,16 +54,10 @@ $stmt->execute($params);
 
 // Récupérer tous les résultats
 $epreuves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>📚 Recueil d'Épreuves Universitaires</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
 <!-- 🟦 En-tête -->
 <header class="bg-primary text-white text-center py-4 shadow-sm mb-4">
@@ -187,7 +181,6 @@ $epreuves = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </ul>
     </nav>
 
-</div>
 
 <!-- 🟫 Pied de page -->
 <footer class="text-center mt-5 mb-3 text-muted">
@@ -195,5 +188,8 @@ $epreuves = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

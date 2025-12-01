@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db.php'; // connexion PDO
+require_once '../../includes/db.php'; // connexion PDO
 
 // Vérifier admin
 // if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
@@ -42,18 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>➕ Ajouter une année universitaire</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
 
-<div class="container my-5">
     <h2 class="mb-4">➕ Ajouter une année universitaire</h2>
 
     <?php if(!empty($errors)): ?>
@@ -82,8 +74,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="submit" class="btn btn-success">💾 Ajouter</button>
         <a href="liste_annees.php" class="btn btn-secondary">Annuler</a>
     </form>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include 'layout.php';
+?>

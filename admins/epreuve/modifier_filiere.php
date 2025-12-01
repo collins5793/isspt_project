@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db.php';
+require_once '../../includes/db.php';
 
 // Vérifier admin
 // if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
@@ -44,18 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 }
+
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>✏️ Modifier la filière</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
     <h2 class="mb-4">✏️ Modifier la filière : <?= htmlspecialchars($nom_filiere) ?></h2>
 
     <?php if(!empty($errors)): ?>
@@ -81,5 +74,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

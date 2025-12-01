@@ -2,10 +2,7 @@
 session_start();
 require_once '../includes/db.php';
 
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header("Location: index.php");
-    exit;
-}
+
 
 // Suppression
 if (isset($_GET['delete'])) {
@@ -18,18 +15,10 @@ if (isset($_GET['delete'])) {
 
 // Récupérer les années
 $annees = $pdo->query("SELECT * FROM academic_years ORDER BY start_date DESC")->fetchAll(PDO::FETCH_ASSOC);
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>📅 Gestion des années universitaires</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
     <h2>📅 Années universitaires</h2>
     <a href="ajouter_annee.php" class="btn btn-success mb-3">➕ Ajouter une année</a>
 
@@ -68,7 +57,8 @@ $annees = $pdo->query("SELECT * FROM academic_years ORDER BY start_date DESC")->
             ?>
         </tbody>
     </table>
-</div>
-
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include 'layout.php';
+?>

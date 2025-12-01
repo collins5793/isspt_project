@@ -1,12 +1,8 @@
 <?php
 session_start();
-require_once '../includes/db.php';
+require_once '../../includes/db.php';
 
-// Vérification admin
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header("Location: index.php");
-    exit;
-}
+
 
 // Suppression
 if (isset($_GET['delete'])) {
@@ -19,18 +15,11 @@ if (isset($_GET['delete'])) {
 
 // Récupérer toutes les filières
 $filieres = $pdo->query("SELECT * FROM filieres ORDER BY nom_filiere")->fetchAll(PDO::FETCH_ASSOC);
+
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>🎓 Gestion des filières</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
     <h2>🎓 Filieres</h2>
     <a href="ajouter_filiere.php" class="btn btn-success mb-3">➕ Ajouter une filière</a>
 
@@ -40,7 +29,6 @@ $filieres = $pdo->query("SELECT * FROM filieres ORDER BY nom_filiere")->fetchAll
                 <th>#</th>
                 <th>Nom</th>
                 <th>Description</th>
-                <th>Date création</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -53,7 +41,6 @@ $filieres = $pdo->query("SELECT * FROM filieres ORDER BY nom_filiere")->fetchAll
                     echo "<td>{$i}</td>";
                     echo "<td>".htmlspecialchars($f['nom_filiere'])."</td>";
                     echo "<td>".htmlspecialchars($f['description'])."</td>";
-                    echo "<td>".htmlspecialchars($f['created_at'])."</td>";
                     echo "<td>
                             <a href='modifier_filiere.php?id={$f['id_filiere']}' class='btn btn-sm btn-warning me-1'>✏️ Modifier</a>
                             <a href='filieres.php?delete={$f['id_filiere']}' class='btn btn-sm btn-danger' onclick='return confirm(\"Voulez-vous vraiment supprimer cette filière ?\")'>🗑️ Supprimer</a>
@@ -67,6 +54,8 @@ $filieres = $pdo->query("SELECT * FROM filieres ORDER BY nom_filiere")->fetchAll
             ?>
         </tbody>
     </table>
-</div>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

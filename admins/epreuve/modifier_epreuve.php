@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../includes/db.php'; // connexion PDO
+require_once '../../includes/db.php'; // connexion PDO
 
 // Vérifier si admin
 // if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
@@ -8,29 +8,44 @@ require_once '../includes/db.php'; // connexion PDO
 //     exit;
 // }
 
-// Initialisation
+// Vérifier si id_epreuve est fourni
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: index.php");
+    exit;
+}
+
+$id_epreuve = (int)$_GET['id'];
 $errors = [];
-$titre = $description = $id_category = $id_filiere = $id_matiere = $academic_year_id = '';
-$niveau = 'autre';
-$universite = $pays = '';
-$is_public = 1;
+
+// Récupérer l'épreuve
+$stmt = $pdo->prepare("SELECT * FROM epreuves WHERE id_epreuve = :id");
+$stmt->execute([':id' => $id_epreuve]);
+$epreuve = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$epreuve) {
+    die("Épreuve introuvable.");
+}
+
+// Initialiser les variables avec les valeurs actuelles
+$titre = $epreuve['titre'];
+$description = $epreuve['description'];
+$id_category = $epreuve['id_category'];
+$id_filiere = $epreuve['id_filiere'];
+$id_matiere = $epreuve['id_matiere'];
+$academic_year_id = $epreuve['academic_year_id'];
+$niveau = $epreuve['niveau'];
+$universite = $epreuve['universite'];
+$pays = $epreuve['pays'];
+$is_public = $epreuve['is_public'];
 
 // Récupérer les catégories, filières, matières et années
 $categories = $pdo->query("SELECT id_category, nom_category FROM epreuves_categories ORDER BY nom_category")->fetchAll(PDO::FETCH_ASSOC);
 $filieres = $pdo->query("SELECT id_filiere, nom_filiere FROM filieres ORDER BY nom_filiere")->fetchAll(PDO::FETCH_ASSOC);
-$matiere_epreuves = $pdo->query("SELECT id_matiere, nom_matiere, id_filiere FROM matiere_epreuves ORDER BY nom_matiere")->fetchAll(PDO::FETCH_ASSOC);
+$matieres = $pdo->query("SELECT id_matiere, nom_matiere, id_filiere FROM matiere_epreuves ORDER BY nom_matiere")->fetchAll(PDO::FETCH_ASSOC);
 $annees = $pdo->query("SELECT id, label FROM academic_years ORDER BY start_date DESC")->fetchAll(PDO::FETCH_ASSOC);
-
-// Définir les dossiers d’upload
-$uploadDir = '../uploads/';
-$thumbDir  = '../uploads/thumbs/';
-
-if(!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-if(!is_dir($thumbDir)) mkdir($thumbDir, 0777, true);
 
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
     $titre = trim($_POST['titre']);
     $description = trim($_POST['description']);
     $id_category = $_POST['id_category'] ?? '';
@@ -42,81 +57,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pays = trim($_POST['pays']);
     $is_public = isset($_POST['is_public']) ? 1 : 0;
 
-    // Validation
+    // Validation simple
     if (empty($titre)) $errors[] = "Le titre est obligatoire.";
     if (empty($id_category)) $errors[] = "La catégorie est obligatoire.";
     if (empty($academic_year_id)) $errors[] = "L'année universitaire est obligatoire.";
-    if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-        $errors[] = "Le fichier PDF est obligatoire.";
-    } else {
+
+    // Gestion du fichier PDF
+    $file_name = $epreuve['file_path']; // conserver l'ancien fichier par défaut
+    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-        if ($ext !== 'pdf') $errors[] = "Seul le format PDF est autorisé.";
-    }
-
-    if (empty($errors)) {
-        // Nom unique du fichier
-        $file_name = time() . '_' . basename($_FILES['file']['name']);
-        $file_path = $uploadDir . $file_name;
-
-        if(move_uploaded_file($_FILES['file']['tmp_name'], $file_path)) {
-
-            // --- Génération miniature avec Ghostscript ---
-            $thumbPath = $thumbDir . pathinfo($file_name, PATHINFO_FILENAME) . '.jpg';
-
-            // Chemin vers Ghostscript, adapte selon ton installation
-            $gsExe = '"C:\\Program Files\\gs\\gs10.06.0\\bin\\gswin64c.exe"';
-
-            $gsCommand = "$gsExe -dNOPAUSE -dBATCH -sDEVICE=jpeg -r150 -dFirstPage=1 -dLastPage=1 -sOutputFile="
-                        . escapeshellarg($thumbPath) . ' '
-                        . escapeshellarg($file_path);
-
-            exec($gsCommand, $output, $returnVar);
-
-            if($returnVar !== 0) {
-                // Fallback si Ghostscript échoue
-                $thumbPath = '../uploads/thumbs/pdf-icon.jpg';
-            }
-
-            // --- Insertion en base ---
-            $stmt = $pdo->prepare("INSERT INTO epreuves 
-                (titre, description, file_path, id_category, id_filiere, id_matiere, academic_year_id, universite, pays, niveau, ajoute_par, is_public)
-                VALUES (:titre, :description, :file_path, :id_category, :id_filiere, :id_matiere, :academic_year_id, :universite, :pays, :niveau, :ajoute_par, :is_public)
-            ");
-            $stmt->execute([
-                ':titre' => $titre,
-                ':description' => $description,
-                ':file_path' => $file_name,
-                ':id_category' => $id_category,
-                ':id_filiere' => $id_filiere ?: null,
-                ':id_matiere' => $id_matiere ?: null,
-                ':academic_year_id' => $academic_year_id,
-                ':universite' => $universite,
-                ':pays' => $pays,
-                ':niveau' => $niveau,
-                ':ajoute_par' => $_SESSION['admin_id'] ?? null,
-                ':is_public' => $is_public
-            ]);
-
-            header("Location: index.php?success=1");
-            exit;
+        if ($ext !== 'pdf') {
+            $errors[] = "Seul le format PDF est autorisé.";
         } else {
-            $errors[] = "Erreur lors de l'upload du fichier.";
+            $upload_dir = 'uploads/';
+            $file_name = time() . '_' . basename($_FILES['file']['name']);
+            $file_path = $upload_dir . $file_name;
+            if (!move_uploaded_file($_FILES['file']['tmp_name'], $file_path)) {
+                $errors[] = "Erreur lors de l'upload du fichier.";
+            }
         }
     }
+
+    // Si pas d'erreurs, mise à jour
+    if (empty($errors)) {
+        $stmt = $pdo->prepare("UPDATE epreuves SET
+            titre = :titre,
+            description = :description,
+            file_path = :file_path,
+            id_category = :id_category,
+            id_filiere = :id_filiere,
+            id_matiere = :id_matiere,
+            academic_year_id = :academic_year_id,
+            universite = :universite,
+            pays = :pays,
+            niveau = :niveau,
+            is_public = :is_public
+            WHERE id_epreuve = :id");
+
+        $stmt->execute([
+            ':titre' => $titre,
+            ':description' => $description,
+            ':file_path' => $file_name,
+            ':id_category' => $id_category,
+            ':id_filiere' => $id_filiere ?: null,
+            ':id_matiere' => $id_matiere ?: null,
+            ':academic_year_id' => $academic_year_id,
+            ':universite' => $universite,
+            ':pays' => $pays,
+            ':niveau' => $niveau,
+            ':is_public' => $is_public,
+            ':id' => $id_epreuve
+        ]);
+
+        header("Location: index.php?updated=1");
+        exit;
+    }
 }
+
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>➕ Ajouter une épreuve</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
-    <h2 class="mb-4">➕ Ajouter une nouvelle épreuve</h2>
+    <h2 class="mb-4">✏️ Modifier l'épreuve : <?= htmlspecialchars($titre) ?></h2>
 
     <?php if (!empty($errors)): ?>
         <div class="alert alert-danger">
@@ -159,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label">Matière</label>
             <select name="id_matiere" class="form-select">
                 <option value="">-- Facultatif --</option>
-                <?php foreach($matiere_epreuves as $mat): ?>
+                <?php foreach($matieres as $mat): ?>
                     <option value="<?= $mat['id_matiere'] ?>" <?= $id_matiere==$mat['id_matiere']?"selected":"" ?>><?= htmlspecialchars($mat['nom_matiere']) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -196,8 +198,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Fichier PDF</label>
-            <input type="file" name="file" accept="application/pdf" class="form-control" required>
+            <label class="form-label">Fichier PDF (laisser vide pour garder l'ancien)</label>
+            <input type="file" name="file" accept="application/pdf" class="form-control">
+            <?php if(!empty($epreuve['file_path'])): ?>
+                <small>Fichier actuel : <?= htmlspecialchars($epreuve['file_path']) ?></small>
+            <?php endif; ?>
         </div>
 
         <div class="form-check mb-3">
@@ -205,11 +210,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-check-label">Rendre public</label>
         </div>
 
-        <button type="submit" class="btn btn-success">➕ Ajouter l'épreuve</button>
+        <button type="submit" class="btn btn-primary">💾 Mettre à jour</button>
         <a href="index.php" class="btn btn-secondary">Annuler</a>
     </form>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

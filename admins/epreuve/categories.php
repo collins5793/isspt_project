@@ -1,12 +1,8 @@
 <?php
 session_start();
-require_once '../includes/db.php';
+require_once '../../includes/db.php';
 
-// Vérifier si admin
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header("Location: index.php");
-    exit;
-}
+
 
 // Suppression d'une catégorie
 if (isset($_GET['delete'])) {
@@ -22,18 +18,11 @@ $categories = $pdo->query("SELECT c.*, a.nom AS created_by_name
                            FROM epreuves_categories c
                            LEFT JOIN administrateurs a ON c.created_by = a.id_admin
                            ORDER BY c.nom_category")->fetchAll(PDO::FETCH_ASSOC);
+
+// --- Contenu à injecter dans le layout ---
+ob_start();
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title>📁 Gestion des catégories</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-
-<div class="container my-5">
     <h2 class="mb-4">📁 Catégories d'épreuves</h2>
     <a href="ajouter_categorie.php" class="btn btn-success mb-3">➕ Ajouter une catégorie</a>
 
@@ -72,9 +61,11 @@ $categories = $pdo->query("SELECT c.*, a.nom AS created_by_name
             ?>
         </tbody>
     </table>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
 
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

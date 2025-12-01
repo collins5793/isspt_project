@@ -880,8 +880,8 @@ button:focus-visible,
     <div class="epreuve-grid">
         <?php if (!empty($epreuves)): ?>
             <?php foreach($epreuves as $row): 
-                $thumbPath = '../uploads/thumbs/' . pathinfo($row['file_path'], PATHINFO_FILENAME) . '.jpg';
-                if(!file_exists($thumbPath)) $thumbPath = '../uploads/thumbs/pdf-icon.jpg';
+                $thumbPath = '../admins/epreuve/uploads/thumbs/' . pathinfo($row['file_path'], PATHINFO_FILENAME) . '.jpg';
+                if(!file_exists($thumbPath)) $thumbPath = '../admins/epreuve/uploads/thumbs/pdf-icon.jpg';
             ?>
             <div class="epreuve-card"
                 data-titre="<?= htmlspecialchars($row['titre']) ?>"
@@ -949,7 +949,7 @@ cards.forEach(card => {
         document.getElementById('modal-type').innerText = card.dataset.type;
         document.getElementById('modal-niveau').innerText = card.dataset.niveau;
         document.getElementById('modal-description').innerText = card.dataset.description;
-        document.getElementById('modal-download').href = '../uploads/' + card.dataset.file;
+        document.getElementById('modal-download').href = '../admins/epreuve/uploads/' + card.dataset.file;
         modal.style.display = 'flex';
     });
 });
