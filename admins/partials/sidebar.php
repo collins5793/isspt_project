@@ -28,6 +28,7 @@ define('BASE_URL', '/isspt_projet/admins/');
     <nav class="sidebar-nav">
         <h4 class="sidebar-title">Menu Principal</h4>
         <a href="<?= BASE_URL ?>dashboard.php" class="sidebar-link">📊 Tableau de bord</a>
+       <a href="<?= BASE_URL ?>actualite/actualites.php" class="sidebar-link">Actualite</a>
 
         <h4 class="sidebar-title collapsible">👥 Utilisateurs ▸</h4>
         <div class="submenu">
@@ -58,7 +59,7 @@ define('BASE_URL', '/isspt_projet/admins/');
         <div class="submenu">
             <a href="<?= BASE_URL ?>evenement/evenements.php" class="sidebar-link">🎊 Tous les événements</a>
             <a href="<?= BASE_URL ?>tickets.php" class="sidebar-link">🎟️ Tickets</a>
-            <a href="<?= BASE_URL ?>activites.php" class="sidebar-link">⚽ Activités & Clubs</a>
+            <a href="<?= BASE_URL ?>evenement/activites.php" class="sidebar-link">⚽ Activités & Clubs</a>
             <a href="<?= BASE_URL ?>galerie.php" class="sidebar-link">🖼️ Galerie</a>
         </div>
 

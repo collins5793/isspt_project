@@ -91,21 +91,57 @@ ob_start();
     </section>
 
     <section class="event-artistes">
-        <h3>Artistes invités</h3>
-        <?php if ($artistes): ?>
-            <ul>
+    <h3>Artistes invités</h3>
+
+    <?php if ($artistes): ?>
+        <div class="artistes-grid">
+            <a href="ajouter_artiste.php?id_event=<?= $eventId ?>" 
+                            class="btn btn-warning">Ajouter artiste</a>
                 <?php foreach ($artistes as $artiste): ?>
-                    <li>
-                        <?= htmlspecialchars($artiste['nom_artiste']) ?>
-                        <?php if ($artiste['pseudonyme']): ?>(<?= htmlspecialchars($artiste['pseudonyme']) ?>)<?php endif; ?>
-                        - <?= htmlspecialchars($artiste['role']) ?>
-                    </li>
+                    <div class="artiste-card">
+
+                        <!-- Photo -->
+                        <div class="artiste-photo">
+                            <?php 
+                                $photoPath = "../uploads/artistes/" . ($artiste['photo'] ?: "default.png");
+                            ?>
+                            <img src="<?= htmlspecialchars($photoPath) ?>" alt="Photo artiste">
+                        </div>
+
+                        <div class="artiste-info">
+                            <h4 class="artiste-nom">
+                                <?= htmlspecialchars($artiste['nom_artiste']) ?>
+                                <?php if ($artiste['pseudonyme']): ?>
+                                    <small>(<?= htmlspecialchars($artiste['pseudonyme']) ?>)</small>
+                                <?php endif; ?>
+                            </h4>
+
+                            <p class="artiste-role"><strong>Rôle :</strong> <?= htmlspecialchars($artiste['role']) ?></p>
+
+                            <?php if ($artiste['description']): ?>
+                                <p class="artiste-desc"><?= nl2br(htmlspecialchars($artiste['description'])) ?></p>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="artiste-actions">
+                            <a href="modifier_artiste.php?id_event=<?= $eventId ?>&nom=<?= urlencode($artiste['nom_artiste']) ?>" 
+                            class="btn btn-warning">Modifier</a>
+
+                            <a href="supprimer_artiste.php?id_event=<?= $eventId ?>&nom=<?= urlencode($artiste['nom_artiste']) ?>" 
+                            class="btn btn-danger"
+                            onclick="return confirm('Supprimer cet artiste ?');">
+                            Supprimer
+                            </a>
+                        </div>
+
+                    </div>
                 <?php endforeach; ?>
-            </ul>
+            </div>
         <?php else: ?>
             <p>Aucun artiste invité.</p>
         <?php endif; ?>
     </section>
+
 
     <section class="event-participants">
         <h3>Participants</h3>
@@ -118,6 +154,7 @@ ob_start();
                         <th>Statut</th>
                         <th>Présence</th>
                         <th>Date participation</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,6 +168,13 @@ ob_start();
                             <td><?= htmlspecialchars($p['statut']) ?></td>
                             <td><?= $p['is_checked_in'] ? '✔' : '❌' ?></td>
                             <td><?= date('d/m/Y H:i', strtotime($p['date_participation'])) ?></td>
+                            <td>
+                                <a href="supprimer_participant.php?id_event=<?= $eventId ?>&id_participant=<?= $p['id'] ?>" 
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Supprimer ce participant ?');">
+                                   Supprimer
+                                </a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -140,7 +184,7 @@ ob_start();
         <?php endif; ?>
     </section>
 
-    <section class="event-tickets">
+    <!-- <section class="event-tickets">
         <h3>Tickets</h3>
         <?php if ($tickets): ?>
             <table>
@@ -173,51 +217,82 @@ ob_start();
         <?php else: ?>
             <p>Aucun ticket émis.</p>
         <?php endif; ?>
-    </section>
+    </section> -->
 
     <section class="event-galerie">
-        <h3>Galerie</h3>
-        <?php if ($galerie): ?>
-            <div class="galerie-grid">
-                <?php foreach ($galerie as $g): ?>
+    <h3>Galerie</h3>
+    <?php if ($galerie): ?>
+        <div class="galerie-grid">
+            <?php foreach ($galerie as $g): ?>
+                <div class="galerie-item">
+
                     <?php if ($g['file_type'] === 'image'): ?>
-                        <img src="../uploads/<?= htmlspecialchars($g['file_path']) ?>" alt="<?= htmlspecialchars($g['caption'] ?? '') ?>" class="galerie-image">
+                        <img src="../uploads/<?= htmlspecialchars($g['file_path']) ?>" 
+                             alt="<?= htmlspecialchars($g['caption'] ?? '') ?>" 
+                             class="galerie-image">
                     <?php elseif ($g['file_type'] === 'video'): ?>
                         <video controls class="galerie-video">
                             <source src="../uploads/<?= htmlspecialchars($g['file_path']) ?>" type="video/mp4">
                         </video>
                     <?php endif; ?>
-                <?php endforeach; ?>
-            </div>
-        <?php else: ?>
-            <p>Aucune image ou vidéo.</p>
-        <?php endif; ?>
-    </section>
+
+                    <!-- Bouton supprimer -->
+                    <a href="delete_galerie.php?id=<?= $g['id'] ?>&event=<?= $eventId ?>"
+                       class="btn btn-danger btn-sm mt-2"
+                       onclick="return confirm('Supprimer cet élément ?');">
+                        Supprimer
+                    </a>
+
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <p>Aucune image ou vidéo.</p>
+    <?php endif; ?>
+</section>
 
     <section class="event-comments">
-        <h3>Commentaires</h3>
-        <?php if ($comments): ?>
-            <ul>
-                <?php foreach ($comments as $c): ?>
-                    <li>
+    <h3>Commentaires</h3>
+
+    <?php if ($comments): ?>
+        <ul class="list-group">
+
+            <?php foreach ($comments as $c): ?>
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+
+                    <div>
                         <strong>
-                            <?= $c['user_type'] === 'admin' 
+                            <?= $c['user_type'] === 'admin'
                                 ? htmlspecialchars($c['admin_prenom'].' '.$c['admin_nom'])
-                                : htmlspecialchars($c['etu_prenom'].' '.$c['etu_nom'])
-                            ?>
+                                : htmlspecialchars($c['etu_prenom'].' '.$c['etu_nom']) ?>
                         </strong> :
+
                         <?= nl2br(htmlspecialchars($c['message'])) ?>
+
                         <?php if ($c['note'] !== null): ?>
                             <em>(Note: <?= $c['note'] ?>/10)</em>
                         <?php endif; ?>
+
+                        <br>
                         <small><?= date('d/m/Y H:i', strtotime($c['date_commentaire'])) ?></small>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Aucun commentaire.</p>
-        <?php endif; ?>
-    </section>
+                    </div>
+
+                    <!-- Bouton supprimer -->
+                    <a href="delete_comment.php?id=<?= $c['id_commentaire'] ?>&event=<?= $eventId ?>"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Supprimer ce commentaire ?');">
+                        Supprimer
+                    </a>
+
+                </li>
+            <?php endforeach; ?>
+
+        </ul>
+    <?php else: ?>
+        <p>Aucun commentaire.</p>
+    <?php endif; ?>
+</section>
+
 
 </div>
 
