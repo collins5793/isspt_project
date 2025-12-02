@@ -86,12 +86,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_season'])) {
         $error = "Erreur : " . $e->getMessage();
     }
 }
+
+ob_start();
+
 ?>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Nouvelle Saison Football</title>
     <style>
         .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
         .section h3 { margin-top: 0; }
@@ -101,8 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_season'])) {
         table { border-collapse: collapse; width: 100%; margin-top: 15px; }
         th, td { border: 1px solid #999; padding: 5px; text-align:center; }
     </style>
-</head>
-<body>
+
 <h1>Créer une nouvelle saison</h1>
 
 <?php if(!empty($success)) echo "<p style='color:green'>$success</p>"; ?>
@@ -319,5 +317,8 @@ document.addEventListener('change', function(e){
     }
 });
 </script>
-</body>
-</html>
+<?php
+// Récupération du contenu et injection dans le layout
+$content = ob_get_clean();
+include '../layout.php';
+?>

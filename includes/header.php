@@ -1,7 +1,8 @@
 <?php
 require_once 'db.php'; // connexion PDO
 
-
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
 // Initialisation des variables
 $isLogged = false;
 $isAdmin = false;
@@ -576,13 +577,13 @@ if (isset($_SESSION['admin_id'])) {
 
   <!-- Menu principal -->
   <nav class="header-nav">
-    <ul>
-      <li><a href="index.php">Accueil</a></li>
-      <li><a href="activites.php">Activités & Événements</a></li>
-      <li><a href="resultats.php">Résultats Académiques</a></li>
-      <li><a href="epreuves.php">Épreuves</a></li>
-      <li><a href="contact.php">Contact</a></li>
-    </ul>
+      <ul>
+        <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
+        <li><a href="<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
+        <li><a href="<?= $base_url ?>resultats.php">Résultats Académiques</a></li>
+        <li><a href="<?= $base_url ?>epreuves/index.php">Épreuves</a></li>
+        <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
+      </ul>
   </nav>
 
   <!-- Boutons utilisateur -->

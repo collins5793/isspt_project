@@ -43,17 +43,7 @@ if ($year_id) {
 // =========================
 //  PRÉSIDENT DU COMITÉ
 // =========================
-$stmt = $pdo->query("
-    SELECT a.*, e.nom AS etu_nom, e.prenom AS etu_prenom, e.photo AS etu_photo
-    FROM administrateurs a
-    LEFT JOIN etudiants e ON a.id_etudiant = e.id_etudiant
-    WHERE a.role = 'bureau' AND a.poste_bureau = 'président'
-    LIMIT 1
-");
-$president = $stmt->fetch();
-?>
 
-<?php
 // Récupérer l'année académique courante
 $stmtYear = $pdo->query("SELECT id FROM academic_years WHERE is_current = 1 LIMIT 1");
 $currentYear = $stmtYear->fetch(PDO::FETCH_ASSOC);
@@ -63,6 +53,47 @@ if ($currentYear) {
     $currentYearId = $currentYear['id'];
 } else {
     $currentYearId = 0; // ou gérer l'erreur comme tu veux
+
+
+}
+
+
+
+// --- Récupération du président actuel ---
+$president = null;
+if ($year_id) {
+    $stmt = $pdo->prepare("
+        SELECT a.id_admin, e.nom, e.prenom, e.photo
+        FROM administrateurs a
+        JOIN etudiants e ON a.id_etudiant = e.id_etudiant
+        WHERE a.poste_bureau = 'président'
+        LIMIT 1
+    ");
+    $stmt->execute();
+    $president = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// --- Récupération des actualités du président pour l'année en cours ---
+$actualites = [];
+$mot_du_president = null;
+if ($president && $year_id) {
+    $stmt = $pdo->prepare("
+        SELECT titre, contenu, mot_du_president, date_publication 
+        FROM actualites
+        WHERE id_admin = ? AND id_academic_year = ?
+        ORDER BY date_publication DESC
+        LIMIT 3
+    ");
+    $stmt->execute([$president['id_admin'], $year_id]);
+    $actualites = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Si le mot du président existe, prendre le dernier
+    foreach ($actualites as $actu) {
+        if (!empty($actu['mot_du_president'])) {
+            $mot_du_president = $actu['mot_du_president'];
+            break; // prend le premier trouvé
+        }
+    }
 }
 ?>
 
@@ -1029,28 +1060,19 @@ h2::after {
 <section id="mot-president" data-aos="fade-up">
     <h2>👨‍💼 Mot du Président</h2>
 
-    <?php if (!$president): ?>
-        <p>Aucun président enregistré.</p>
-    <?php else: ?>
-
-        <div class="president-block">
-            <div>
-                <img src="<?= $president['etu_photo'] ? '../uploads/'.$president['etu_photo'] : '../assets/images/default-avatar.png' ?>" 
-                     alt="Président" data-aos="fade-right">
+    <!-- Mot du président -->
+        <?php if ($mot_du_president): ?>
+        <div class="mot-president-card">
+            <div class="president-photo">
+                <img src="<?= htmlspecialchars($president['photo']) ?>" alt="Photo du président">
             </div>
-
-            <div data-aos="fade-left">
-                <p>
-                    Bienvenue à cette édition de la Journée de l’Étudiant Tarsien.
-                    Cet événement reflète notre unité et notre engagement pour l’excellence.
-                </p>
-
-                <p>— <?= htmlspecialchars($president["etu_prenom"] . " " . $president["etu_nom"]) ?></p>
-                <p><em>Président du comité JET</em></p>
+            <div class="mot-president-text">
+                <strong>Mot du Président :</strong>
+                <p><?= nl2br(htmlspecialchars($mot_du_president)) ?></p>
+                <p class="president-nom"><?= htmlspecialchars($president['prenom'] . ' ' . $president['nom']) ?> - Président du Bureau des Étudiants</p>
             </div>
         </div>
-
-    <?php endif; ?>
+        <?php endif; ?>
 </section>
 
 

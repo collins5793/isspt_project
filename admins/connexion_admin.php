@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_nom'] = $admin['nom'];
             $_SESSION['admin_role'] = $admin['role'];
 
-            header("Location: dashboard_admin.php");
+            header("Location: admins/dashboard.php");
             exit;
         } else {
             $erreur = "❌ Email ou mot de passe incorrect.";

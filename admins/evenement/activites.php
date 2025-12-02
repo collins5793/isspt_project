@@ -27,36 +27,35 @@ if (!$defaultYear && !empty($years)) {
 $selectedYear = isset($_GET['year']) ? intval($_GET['year']) : $defaultYear;
 
 // -------------------------------
-//  Récupération des événements filtrés
+//  Récupération des activités filtrées
 // -------------------------------
 $stmt = $pdo->prepare("
-    SELECT e.*, 
-        a.nom AS admin_nom, 
-        a.prenom AS admin_prenom, 
-        ay.label AS academic_year
-    FROM evenements e
-    LEFT JOIN administrateurs a ON e.cree_par = a.id_admin
-    LEFT JOIN academic_years ay ON e.academic_year_id = ay.id
-    WHERE e.academic_year_id = ?
-    ORDER BY e.event_start DESC
+    SELECT act.*, 
+           a.nom AS admin_nom, 
+           a.prenom AS admin_prenom, 
+           ay.label AS academic_year
+    FROM activites act
+    LEFT JOIN administrateurs a ON act.cree_par = a.id_admin
+    LEFT JOIN academic_years ay ON act.academic_year_id = ay.id
+    WHERE act.academic_year_id = ?
+    ORDER BY act.date_creation DESC
 ");
 
 $stmt->execute([$selectedYear]);
-$evenements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$activites = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Contenu à injecter dans le layout
 ob_start();
 ?>
 
 <div class="page-header">
-    <h2>Événements</h2>
-
+    <h2>Activités</h2>
     <div class="actions">
-        <a href="ajouter_evenement.php" class="btn btn-primary">Ajouter un événement</a>
+        <a href="ajouter_activite.php" class="btn btn-primary">Ajouter une activité</a>
     </div>
 </div>
 
-<!-- ⬇️ FILTRE PAR ANNÉE ACADÉMIQUE -->
+<!-- FILTRE PAR ANNÉE ACADÉMIQUE -->
 <form method="GET" class="filter-form">
     <label for="year">Année académique :</label>
     <select name="year" id="year" onchange="this.form.submit()">
@@ -72,31 +71,29 @@ ob_start();
 
 <hr>
 
-<!-- Affichage des événements -->
+<!-- Affichage des activités -->
 <div class="events-grid">
-    <?php if ($evenements): ?>
-        <?php foreach ($evenements as $event): ?>
+    <?php if ($activites): ?>
+        <?php foreach ($activites as $act): ?>
             <div class="event-card">
-                <h3 class="event-title"><?= htmlspecialchars($event['nom_evenement']) ?></h3>
-                <p><strong>Type:</strong> <?= htmlspecialchars($event['type_evenement']) ?></p>
-                <p><strong>Date:</strong> <?= date('d/m/Y H:i', strtotime($event['event_start'])) ?></p>
-                <p><strong>Lieu:</strong> <?= htmlspecialchars($event['lieu'] ?? 'Non précisé') ?></p>
-                <p><strong>Prix ticket:</strong> <?= number_format($event['prix_ticket'], 2) ?> FCFA</p>
-                <p><strong>Année académique:</strong> <?= htmlspecialchars($event['academic_year']) ?></p>
-                <p><strong>Créé par:</strong> <?= htmlspecialchars($event['admin_prenom'] . ' ' . $event['admin_nom']) ?></p>
+                <h3 class="event-title"><?= htmlspecialchars($act['nom_activite']) ?></h3>
+                <p><strong>Description:</strong> <?= nl2br(htmlspecialchars($act['description'] ?? '')) ?></p>
+                <p><strong>Conditions:</strong> <?= nl2br(htmlspecialchars($act['conditions'] ?? '')) ?></p>
+                <p><strong>Année académique:</strong> <?= htmlspecialchars($act['academic_year']) ?></p>
+                <p><strong>Créé par:</strong> <?= htmlspecialchars($act['admin_prenom'] . ' ' . $act['admin_nom']) ?></p>
 
                 <div class="event-actions">
-                    <a href="evenement_detail.php?id=<?= $event['id_evenement'] ?>" class="btn btn-info">Voir détails</a>
-                    <a href="evenement_modifier.php?id=<?= $event['id_evenement'] ?>" class="btn btn-warning">Modifier</a>
-                    <a href="evenement_supprimer.php?id=<?= $event['id_evenement'] ?>" class="btn btn-danger"
-                       onclick="return confirm('Voulez-vous vraiment supprimer cet événement ?');">
+                    <a href="activite_detail.php?id=<?= $act['id_activite'] ?>" class="btn btn-info">Voir détails</a>
+                    <a href="modifier_activite.php?id=<?= $act['id_activite'] ?>" class="btn btn-warning">Modifier</a>
+                    <a href="activite_supprimer.php?id=<?= $act['id_activite'] ?>" class="btn btn-danger"
+                       onclick="return confirm('Voulez-vous vraiment supprimer cette activité ?');">
                        Supprimer
                     </a>
                 </div>
             </div>
         <?php endforeach; ?>
     <?php else: ?>
-        <p style="text-align:center;margin-top:20px;">Aucun événement trouvé pour cette année académique.</p>
+        <p style="text-align:center;margin-top:20px;">Aucune activité trouvée pour cette année académique.</p>
     <?php endif; ?>
 </div>
 

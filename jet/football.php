@@ -104,17 +104,37 @@ $kpi = [
 // ---------------------------------------
 // Meilleur buteur
 // ---------------------------------------
+// ---------------------------------------
+// Meilleur buteur
+// ---------------------------------------
 $top_scorer = $pdo->query("
-    SELECT tp.player_id, tp.full_name, tp.team_id, t.name AS team_name, e.photo, COUNT(mg.goal_id) AS total_buts
+    SELECT 
+        tp.player_id,
+        COALESCE(CONCAT(e.prenom, ' ', e.nom), tp.full_name) AS full_name,
+        tp.team_id,
+        t.name AS team_name,
+        e.photo,
+        COUNT(mg.goal_id) AS total_buts
     FROM match_goals mg
     JOIN team_players tp ON tp.player_id = mg.player_id
     JOIN football_teams t ON t.team_id = tp.team_id
     LEFT JOIN etudiants e ON e.id_etudiant = tp.user_id
     WHERE mg.season_id = $season_id
-    GROUP BY mg.player_id
+    GROUP BY tp.player_id, tp.team_id, t.name, e.prenom, e.nom, e.photo, tp.full_name
     ORDER BY total_buts DESC
     LIMIT 1
 ")->fetch();
+
+if (!empty($top_scorer)):
+    // Nom complet sécurisé
+    $player_name = htmlspecialchars($top_scorer['full_name'] ?? 'Joueur');
+
+    // Image du joueur
+    $uploadDir = '../admins/uploads/photos_etudiants/';
+    $player_photo = !empty($top_scorer['photo']) && file_exists($uploadDir . $top_scorer['photo'])
+                    ? $uploadDir . $top_scorer['photo']
+                    : '../assets/images/default-avatar.png';
+
 
 // ---------------------------------------
 // Prochain match
@@ -1010,15 +1030,31 @@ form button:hover {
     <?php endif; ?>
 
     <?php if (!empty($top_scorer)): ?>
-        <div class="top-scorer">
-            <img src="<?= $top_scorer['photo'] ? '../storage/'.$top_scorer['photo'] : '/images/avatar.png' ?>" alt="Top Buteur">
-            <div>
-                <h3>🏆 TOP BUTEUR</h3>
-                <h2><?= htmlspecialchars($top_scorer['full_name']) ?></h2>
-                <p><?= htmlspecialchars($top_scorer['team_name']) ?> — <?= $top_scorer['total_buts'] ?> buts</p>
-            </div>
+    <?php
+        // Nom complet sécurisé
+        $player_name = htmlspecialchars($top_scorer['full_name'] ?? 'Joueur');
+
+        // Image du joueur
+        $uploadDir = '../admins/uploads/photos_etudiants/';
+        $player_photo = !empty($top_scorer['photo']) && file_exists($uploadDir . $top_scorer['photo'])
+                        ? $uploadDir . $top_scorer['photo']
+                        : '../assets/images/default-avatar.png';
+    ?>
+    
+    <div class="top-scorer">
+        <div class="player-photo">
+            <img src="<?= $player_photo ?>" alt="Top Buteur" class="rounded-circle" width="80" height="80" style="object-fit:cover;">
         </div>
-    <?php endif; ?>
+        <div>
+            <h3>🏆 TOP BUTEUR</h3>
+            <h4><?= $player_name ?></h4>
+            <p><?= htmlspecialchars($top_scorer['team_name'] ?? 'Équipe') ?> — <?= (int)$top_scorer['total_buts'] ?> buts</p>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php endif; ?>
+
 
 </div>
 
