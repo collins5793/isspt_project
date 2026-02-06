@@ -431,7 +431,7 @@
     <!-- Section 1 : À propos de l'université -->
     <div class="footer-section about">
       <a href="#" class="footer-logo">
-        <img src="assets/images/logo.png" alt="Logo Université" class="logo-small">
+        <img src="../assets/images/logo.png" alt="Logo Université" class="logo-small">
       </a>
       <h3>À propos</h3>
       <p>
@@ -443,13 +443,11 @@
     <div class="footer-section links">
       <h3>Liens rapides</h3>
       <ul>
-        <li><a href="index.php">Accueil</a></li>
-        <li><a href="activites.php">Activités & Événements</a></li>
-        <li><a href="resultats.php">Résultats Académiques</a></li>
-        <li><a href="epreuves.php">Épreuves</a></li>
-        <li><a href="contact.php">Contact</a></li>
-        <li><a href="faq.php">FAQ</a></li>
-        <li><a href="reglement.php">Règlement</a></li>
+        <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
+        <li><a href="<?= $base_url ?>activites.php">Activités & Événements</a></li>
+        <li><a href="<?= $base_url ?>epreuves.php">Épreuves</a></li>
+        <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
+        <li><a href="<?= $base_url ?>faq.php">FAQ</a></li>
       </ul>
     </div>
 
@@ -459,7 +457,7 @@
       <p><i class="fas fa-map-marker-alt"></i> Abomey-Calavi, Bénin</p>
       <p><i class="fas fa-envelope"></i> contact@universitexyz.edu</p>
       <p><i class="fas fa-phone"></i> +229 97 00 00 00</p>
-      <p><a href="https://www.google.com/maps" target="_blank">Voir sur la carte</a></p>
+      <p><a href="https://www.google.com/maps/place/Institut+Sup%C3%A9rieur+Saint+Paul+de+Tarse+(ISSPT)/@6.4244138,2.3362067,17z/data=!4m14!1m7!3m6!1s0x1024a9fc75b45259:0xdca207aa6cb158f6!2sInstitut+Sup%C3%A9rieur+Saint+Paul+de+Tarse+(ISSPT)!8m2!3d6.4244085!4d2.3387816!16s%2Fg%2F11fp8zvvl4!3m5!1s0x1024a9fc75b45259:0xdca207aa6cb158f6!8m2!3d6.4244085!4d2.3387816!16s%2Fg%2F11fp8zvvl4?entry=ttu&g_ep=EgoyMDI2MDIwMy4wIKXMDSoASAFQAw%3D%3D" target="_blank">Voir sur la carte</a></p>
     </div>
 
     <!-- Section 4 : Réseaux sociaux -->
@@ -477,7 +475,7 @@
 
   <!-- Barre inférieure / Copyright -->
   <div class="footer-bottom">
-    <p>&copy; <?= date('Y') ?> Université XYZ. Tous droits réservés. | <a href="mentions_legales.php">Mentions légales</a> | <a href="politique_confidentialite.php">Politique de confidentialité</a></p>
+    <p>&copy; <?= date('Y') ?> Université Superieur Saint Paul Tarse. Tous droits réservés. | <a href="politique_condition.php">Politique de confidentialité et condition d'utilisation</a></p>
   </div>
 
 </footer>

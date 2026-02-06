@@ -24,6 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmtAdmin->execute(['id_etudiant' => $etudiant['id_etudiant']]);
         $admin = $stmtAdmin->fetch(PDO::FETCH_ASSOC);
 
+        $acceptTerms = isset($_POST['termsAccepted']) && $_POST['termsAccepted'] == '1' ? 1 : 0;
+
+        if($acceptTerms && $etudiant['accepte_cgu'] != 1){
+            $stmtUpdate = $pdo->prepare("UPDATE etudiants SET accepte_cgu = 1, date_acceptation_cgu = NOW() WHERE id_etudiant = :id");
+            $stmtUpdate->execute(['id' => $etudiant['id_etudiant']]);
+        }
+
         if ($admin) {
             // L'étudiant est membre du bureau, on définit les sessions admin
             $_SESSION['admin_id'] = $admin['id_admin'];
@@ -93,6 +100,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label class="form-label">Mot de passe</label>
             <input type="password" name="mot_de_passe" class="form-control" required>
         </div>
+
+        <input type="hidden" name="termsAccepted" id="termsAccepted" value="0">
+        <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if(localStorage.getItem('termsAccepted') === 'true'){
+                document.getElementById('termsAccepted').value = '1';
+            }
+        });
+        </script>
 
         <button type="submit" class="btn btn-primary w-100">Se connecter</button>
 
