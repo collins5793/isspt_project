@@ -15,6 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_id'] = $admin['id_admin'];
             $_SESSION['admin_nom'] = $admin['nom'];
             $_SESSION['admin_role'] = $admin['role'];
+            $acceptTerms = isset($_POST['termsAccepted']) && $_POST['termsAccepted'] == '1' ? 1 : 0;
+
+            if($acceptTerms && $admin['accepte_cgu'] != 1){
+                $stmtUpdate = $pdo->prepare("UPDATE administrateurs SET accepte_cgu = 1, date_acceptation_cgu = NOW() WHERE id_admin = :id");
+                $stmtUpdate->execute(['id' => $admin['id_admin']]);
+            }
 
             header("Location: admins/dashboard.php");
             exit;
@@ -76,6 +82,12 @@ button:hover { background: #0056d2; }
   <form method="POST">
     <input type="email" name="email" placeholder="Email" required>
     <input type="password" name="mot_de_passe" placeholder="Mot de passe" required>
+    <input type="hidden" name="termsAccepted" id="termsAccepted" value="0">
+    <script>
+    if(localStorage.getItem('termsAccepted') === 'true'){
+        document.getElementById('termsAccepted').value = '1';
+    }
+    </script>
     <button type="submit">Se connecter</button>
   </form>
   <p style="margin-top:15px;">Pas encore de compte ? <a href="inscription_admin.php">Créer un compte</a></p>

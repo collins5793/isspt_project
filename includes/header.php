@@ -1,13 +1,6 @@
 <?php
 require_once 'db.php'; // connexion PDO
 
-define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
-$base_url = BASE_URL;
-// Initialisation des variables
-$isLogged = false;
-$isAdmin = false;
-$userName = '';
-$userAvatar = '../assets/images/default-avatar.png'; // avatar par défaut
 
 // Vérification si un étudiant est connecté
 if (isset($_SESSION['etudiant_id'])) {
@@ -579,20 +572,21 @@ if (isset($_SESSION['admin_id'])) {
   <nav class="header-nav">
       <ul>
         <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
-        <li><a href="<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
+        <li><a href=  "<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
         <li><a href="<?= $base_url ?>epreuves/index.php">Épreuves</a></li>
         <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
+        <li><a href="<?= $base_url ?>equipe_devs.php">Équipe de Développement</a></li>
       </ul>
   </nav>
 
   <!-- Boutons utilisateur -->
   <div class="header-right">
 
-    <!-- Recherche -->
+    <!-- Recherche
     <div class="header-search">
       <input type="text" placeholder="Rechercher...">
       <i class="fas fa-search"></i>
-    </div>
+    </div> -->
 
     <!-- Si l'utilisateur n'est pas connecté -->
     <?php if (!$isLogged): ?>
@@ -612,7 +606,7 @@ if (isset($_SESSION['admin_id'])) {
         <ul class="user-dropdown">
           <li><a href="profil.php"><i class="fas fa-id-badge"></i> Mon profil</a></li>
           <?php if ($isAdmin): ?>
-            <li><a href="dashboard.php"><i class="fas fa-cog"></i> Espace admin</a></li>
+            <li><a href="<?= $base_url ?>admins/dashboard.php"><i class="fas fa-cog"></i> Espace admin</a></li>
           <?php endif; ?>
           <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
         </ul>

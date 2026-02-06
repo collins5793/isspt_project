@@ -2,6 +2,13 @@
 session_start();
 require_once '../includes/db.php'; // connexion PDO
 use Spatie\PdfToImage\Pdf;
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
+// Initialisation des variables
+$isLogged = false;
+$isAdmin = false;
+$userName = '';
+$userAvatar = '../assets/images/default-avatar.png'; // avatar par défaut
 
 // --- Vérification de la connexion (admin OU étudiant) ---
 $isAdmin = isset($_SESSION['admin_id']);
