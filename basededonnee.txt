@@ -65,17 +65,27 @@ CREATE TABLE academic_years (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE actualites (
-    id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    id_admin INT UNSIGNED NOT NULL,              -- L'administrateur (souvent président) qui publie
-    id_academic_year INT UNSIGNED NOT NULL,      -- L'année académique de l'actualité
-    titre VARCHAR(255) NOT NULL,                 -- Titre de l'actualité
-    contenu TEXT NOT NULL,                       -- Contenu de l'actualité
-    mot_du_president TEXT NULL,                  -- Message personnel du président
-    date_publication DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Date de publication
-    PRIMARY KEY (id),
-    FOREIGN KEY (id_admin) REFERENCES administrateurs(id_admin) ON DELETE CASCADE,
-    FOREIGN KEY (id_academic_year) REFERENCES academic_years(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_admin INT UNSIGNED NOT NULL,
+  id_academic_year INT UNSIGNED NOT NULL,
+  titre VARCHAR(255) NOT NULL,
+  contenu TEXT NOT NULL,
+  mot_du_president TEXT NULL,
+  date_publication DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  statut ENUM('brouillon','publie','archive') 
+         NOT NULL DEFAULT 'brouillon',
+  PRIMARY KEY (id),
+  KEY id_admin (id_admin),
+  KEY id_academic_year (id_academic_year),
+  CONSTRAINT fk_actualites_admin
+    FOREIGN KEY (id_admin)
+    REFERENCES administrateurs(id_admin),
+  CONSTRAINT fk_actualites_academic_year
+    FOREIGN KEY (id_academic_year)
+    REFERENCES academic_years(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 
+  COLLATE=utf8mb4_0900_ai_ci;
+
 -- =============================================
 -- MODULE 1 : RESULTATS ACADEMIQUES
 -- =============================================
@@ -202,15 +212,54 @@ CREATE TABLE activites (
   id_activite INT UNSIGNED NOT NULL AUTO_INCREMENT,
   nom_activite VARCHAR(100) NOT NULL,
   description TEXT NULL,
-  conditions TEXT NULL,
+  conditions ENUM(
+    'etre etudiant de l''isspt',
+    'ouvert à tous'
+  ) NULL,
   academic_year_id INT UNSIGNED NOT NULL,
   date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cree_par INT UNSIGNED NULL,
+  accessibilite ENUM('isspt','public') NOT NULL DEFAULT 'isspt',
+  type_participation ENUM('individuel','equipe') 
+                     NOT NULL DEFAULT 'individuel',
+  equipe_min INT NULL,
+  equipe_max INT NULL,
+  max_participants INT NULL,
+  date_limite_inscription DATETIME NULL,
+  statut ENUM('brouillon','ouverte','fermee','terminee') 
+         NULL DEFAULT 'ouverte',
   PRIMARY KEY (id_activite),
-  INDEX idx_activites_academic_year (academic_year_id),
-  CONSTRAINT fk_activites_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_activites_cree_par FOREIGN KEY (cree_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  KEY academic_year_id (academic_year_id),
+  KEY cree_par (cree_par),
+  CONSTRAINT fk_activites_academic_year
+    FOREIGN KEY (academic_year_id)
+    REFERENCES academic_years(id),
+  CONSTRAINT fk_activites_admin
+    FOREIGN KEY (cree_par)
+    REFERENCES administrateurs(id_admin)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 
+  COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE groupes_activites (
+  id_groupe INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_activite INT UNSIGNED NOT NULL,
+  nom_groupe VARCHAR(150) NULL,
+  createur_etudiant INT UNSIGNED NULL,
+  membres_externes JSON NULL,
+  date_creation DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id_groupe),
+  KEY id_activite (id_activite),
+  KEY createur_etudiant (createur_etudiant),
+  CONSTRAINT fk_groupes_activites_activite
+    FOREIGN KEY (id_activite)
+    REFERENCES activites(id_activite),
+  CONSTRAINT fk_groupes_activites_etudiant
+    FOREIGN KEY (createur_etudiant)
+    REFERENCES etudiants(id_etudiant)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 
+  COLLATE=utf8mb4_general_ci;
+
 
 CREATE TABLE evenements (
   id_evenement INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -289,31 +338,65 @@ CREATE TABLE participants_evenements (
 CREATE TABLE inscriptions_activites (
   id_inscription INT UNSIGNED NOT NULL AUTO_INCREMENT,
   id_activite INT UNSIGNED NOT NULL,
-  id_etudiant INT UNSIGNED NOT NULL,
+  id_etudiant INT UNSIGNED NULL,
+  nom VARCHAR(100) NULL,
+  prenom VARCHAR(100) NULL,
   date_inscription DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  statut ENUM('en_attente','acceptee','refusee') NOT NULL DEFAULT 'en_attente',
+  statut ENUM('en_attente','acceptee','refusee') 
+         NOT NULL DEFAULT 'en_attente',
   motif_refus TEXT NULL,
+  id_groupe INT UNSIGNED NULL,
   PRIMARY KEY (id_inscription),
-  INDEX idx_ins_act (id_activite),
-  INDEX idx_ins_etud (id_etudiant),
-  CONSTRAINT fk_inscriptions_activites_activite FOREIGN KEY (id_activite) REFERENCES activites(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_inscriptions_activites_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  KEY id_activite (id_activite),
+  KEY id_etudiant (id_etudiant),
+  KEY id_groupe (id_groupe),
+  CONSTRAINT fk_inscriptions_activites_activite
+    FOREIGN KEY (id_activite)
+    REFERENCES activites(id_activite),
+  CONSTRAINT fk_inscriptions_activites_etudiant
+    FOREIGN KEY (id_etudiant)
+    REFERENCES etudiants(id_etudiant),
+  CONSTRAINT fk_inscriptions_activites_groupe
+    FOREIGN KEY (id_groupe)
+    REFERENCES groupes_activites(id_groupe)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 
+  COLLATE=utf8mb4_0900_ai_ci;
+
 
 CREATE TABLE participants_activites (
-  id_participation INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_participation INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  
   id_activite INT UNSIGNED NOT NULL,
-  id_etudiant INT UNSIGNED NOT NULL,
+  
+  id_etudiant INT UNSIGNED NULL,
+  id_groupe INT UNSIGNED NULL,
+  
   academic_year_id INT UNSIGNED NOT NULL,
+  
   role VARCHAR(100) NULL,
-  statut ENUM('actif','abandonné','terminé') NOT NULL DEFAULT 'actif',
+  
+  statut ENUM('actif','abandonne','termine') DEFAULT 'actif',
   performance VARCHAR(255) NULL,
-  PRIMARY KEY (id_participation),
-  INDEX idx_pa_activite (id_activite),
-  INDEX idx_pa_etudiant (id_etudiant),
-  CONSTRAINT fk_participants_activites_activite FOREIGN KEY (id_activite) REFERENCES activites(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_participants_activites_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_participants_activites_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+  
+  CONSTRAINT fk_pa_activite
+    FOREIGN KEY (id_activite)
+    REFERENCES activites(id_activite)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_pa_etudiant
+    FOREIGN KEY (id_etudiant)
+    REFERENCES etudiants(id_etudiant)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_pa_groupe
+    FOREIGN KEY (id_groupe)
+    REFERENCES groupes_activites(id_groupe)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_pa_academic_year
+    FOREIGN KEY (academic_year_id)
+    REFERENCES academic_years(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE galerie (
@@ -855,6 +938,27 @@ CREATE TABLE IF NOT EXISTS matiere_epreuves (
     FOREIGN KEY (id_filiere) REFERENCES filieres(id_filiere) ON DELETE SET NULL,
     FOREIGN KEY (ajoute_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+
+
+
+
+CREATE TABLE contact_messages (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(150) NOT NULL,
+  email VARCHAR(150) NOT NULL,
+  subject VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  ip_address VARCHAR(45) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('nouveau','lu','repondu') 
+         NULL DEFAULT 'nouveau',
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 
+  COLLATE=utf8mb4_unicode_ci;
+
 
 
 base de donnée 

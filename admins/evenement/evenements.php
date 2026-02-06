@@ -87,7 +87,7 @@ ob_start();
 
                 <div class="event-actions">
                     <a href="evenement_detail.php?id=<?= $event['id_evenement'] ?>" class="btn btn-info">Voir détails</a>
-                    <a href="evenement_modifier.php?id=<?= $event['id_evenement'] ?>" class="btn btn-warning">Modifier</a>
+                    <a href="modifier_evenement.php?id=<?= $event['id_evenement'] ?>" class="btn btn-warning">Modifier</a>
                     <a href="evenement_supprimer.php?id=<?= $event['id_evenement'] ?>" class="btn btn-danger"
                        onclick="return confirm('Voulez-vous vraiment supprimer cet événement ?');">
                        Supprimer

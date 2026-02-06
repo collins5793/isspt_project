@@ -1,6 +1,13 @@
 <?php
 session_start();
 require_once 'includes/db.php'; // connexion PDO
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
+// Initialisation des variables
+$isLogged = false;
+$isAdmin = false;
+$userName = '';
+$userAvatar = 'assets/images/default-avatar.png'; // avatar par défaut
 
 // Initialisation des variables
 $isLogged = false;
@@ -984,15 +991,7 @@ nav a:focus-visible,
                 <i class="fas fa-calendar-alt module-icon"></i>
                 <h3>Activités & Événements</h3>
                 <p>Participez aux activités, clubs et événements de l’année. Consultez aussi les archives des éditions précédentes.</p>
-                <a href="jet/index.php" class="btn btn-module">Accéder au module</a>
-            </div>
-
-            <!-- Carte 2 : Résultats Académiques -->
-            <div class="module-card">
-                <i class="fas fa-chart-line module-icon"></i>
-                <h3>Résultats & Relevés</h3>
-                <p>Consultez vos résultats par semestre, téléchargez vos relevés et suivez votre progression académique.</p>
-                <a href="resultats.php" class="btn btn-module">Voir mes résultats</a>
+                <a href="<?= $base_url ?>jet/index.php" class="btn btn-module">Accéder au module</a>
             </div>
 
             <!-- Carte 3 : Épreuves -->
@@ -1000,7 +999,7 @@ nav a:focus-visible,
                 <i class="fas fa-book module-icon"></i>
                 <h3>Banque d’Épreuves</h3>
                 <p>Téléchargez les anciens sujets d’examens par filière, module et année académique.</p>
-                <a href="epreuves.php" class="btn btn-module">Accéder à la banque</a>
+                <a href="<?= $base_url ?>epreuves/index.php" class="btn btn-module">Accéder à la banque</a>
             </div>
 
         </div>

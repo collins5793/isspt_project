@@ -580,7 +580,6 @@ if (isset($_SESSION['admin_id'])) {
       <ul>
         <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
         <li><a href="<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
-        <li><a href="<?= $base_url ?>resultats.php">Résultats Académiques</a></li>
         <li><a href="<?= $base_url ?>epreuves/index.php">Épreuves</a></li>
         <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
       </ul>
@@ -597,7 +596,7 @@ if (isset($_SESSION['admin_id'])) {
 
     <!-- Si l'utilisateur n'est pas connecté -->
     <?php if (!$isLogged): ?>
-      <a href="login.php" class="header-login-btn">
+      <a href="etudiant/login_etudiant.php" class="header-login-btn">
         <i class="fas fa-user"></i> Connexion
       </a>
     <?php else: ?>
