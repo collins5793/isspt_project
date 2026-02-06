@@ -199,17 +199,65 @@ CREATE TABLE student_year_averages (
 -- =============================================
 
 CREATE TABLE activites (
-  id_activite INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_activite INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  
   nom_activite VARCHAR(100) NOT NULL,
   description TEXT NULL,
-  conditions TEXT NULL,
+  
+  conditions ENUM(
+    'etre etudiant de l''isspt',
+    'ouvert à tous'
+  ) NULL,
+  
+  accessibilite ENUM('isspt','public') NOT NULL DEFAULT 'isspt',
+  type_participation ENUM('individuel','equipe') NOT NULL DEFAULT 'individuel',
+  
+  equipe_min INT NULL,
+  equipe_max INT NULL,
+  
+  max_participants INT NULL,
+  
+  date_limite_inscription DATETIME NULL,
+  statut ENUM('brouillon','ouverte','fermee','terminee') DEFAULT 'ouverte',
+  
   academic_year_id INT UNSIGNED NOT NULL,
-  date_creation DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cree_par INT UNSIGNED NULL,
-  PRIMARY KEY (id_activite),
-  INDEX idx_activites_academic_year (academic_year_id),
-  CONSTRAINT fk_activites_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE,
-  CONSTRAINT fk_activites_cree_par FOREIGN KEY (cree_par) REFERENCES administrateurs(id_admin) ON DELETE SET NULL ON UPDATE CASCADE
+  
+  date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  CONSTRAINT fk_activites_academic_year
+    FOREIGN KEY (academic_year_id)
+    REFERENCES academic_years(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_activites_cree_par
+    FOREIGN KEY (cree_par)
+    REFERENCES administrateurs(id_admin)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+CREATE TABLE groupes_activites (
+  id_groupe INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  
+  id_activite INT UNSIGNED NOT NULL,
+  
+  nom_groupe VARCHAR(150) NULL,
+  createur_etudiant INT UNSIGNED NULL,
+  
+  membres_externes JSON NULL,
+  
+  date_creation DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  CONSTRAINT fk_groupes_activite
+    FOREIGN KEY (id_activite)
+    REFERENCES activites(id_activite)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_groupes_createur
+    FOREIGN KEY (createur_etudiant)
+    REFERENCES etudiants(id_etudiant)
+    ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE evenements (
@@ -287,33 +335,70 @@ CREATE TABLE participants_evenements (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE inscriptions_activites (
-  id_inscription INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_inscription INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  
   id_activite INT UNSIGNED NOT NULL,
-  id_etudiant INT UNSIGNED NOT NULL,
-  date_inscription DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  statut ENUM('en_attente','acceptee','refusee') NOT NULL DEFAULT 'en_attente',
+  
+  id_etudiant INT UNSIGNED NULL,
+  nom VARCHAR(100) NULL AFTER id_etudiant,
+  prenom VARCHAR(100) NULL AFTER nom;
+  id_groupe INT UNSIGNED NULL,
+  
+  date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
+  
+  statut ENUM('en_attente','acceptee','refusee') DEFAULT 'en_attente',
   motif_refus TEXT NULL,
-  PRIMARY KEY (id_inscription),
-  INDEX idx_ins_act (id_activite),
-  INDEX idx_ins_etud (id_etudiant),
-  CONSTRAINT fk_inscriptions_activites_activite FOREIGN KEY (id_activite) REFERENCES activites(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_inscriptions_activites_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE
+  
+  CONSTRAINT fk_ins_act_activite
+    FOREIGN KEY (id_activite)
+    REFERENCES activites(id_activite)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_ins_act_etudiant
+    FOREIGN KEY (id_etudiant)
+    REFERENCES etudiants(id_etudiant)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_ins_act_groupe
+    FOREIGN KEY (id_groupe)
+    REFERENCES groupes_activites(id_groupe)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE participants_activites (
-  id_participation INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  id_participation INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  
   id_activite INT UNSIGNED NOT NULL,
-  id_etudiant INT UNSIGNED NOT NULL,
+  
+  id_etudiant INT UNSIGNED NULL,
+  id_groupe INT UNSIGNED NULL,
+  
   academic_year_id INT UNSIGNED NOT NULL,
+  
   role VARCHAR(100) NULL,
-  statut ENUM('actif','abandonné','terminé') NOT NULL DEFAULT 'actif',
+  
+  statut ENUM('actif','abandonne','termine') DEFAULT 'actif',
   performance VARCHAR(255) NULL,
-  PRIMARY KEY (id_participation),
-  INDEX idx_pa_activite (id_activite),
-  INDEX idx_pa_etudiant (id_etudiant),
-  CONSTRAINT fk_participants_activites_activite FOREIGN KEY (id_activite) REFERENCES activites(id_activite) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_participants_activites_etudiant FOREIGN KEY (id_etudiant) REFERENCES etudiants(id_etudiant) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT fk_participants_activites_academic_year FOREIGN KEY (academic_year_id) REFERENCES academic_years(id) ON DELETE RESTRICT ON UPDATE CASCADE
+  
+  CONSTRAINT fk_pa_activite
+    FOREIGN KEY (id_activite)
+    REFERENCES activites(id_activite)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_pa_etudiant
+    FOREIGN KEY (id_etudiant)
+    REFERENCES etudiants(id_etudiant)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_pa_groupe
+    FOREIGN KEY (id_groupe)
+    REFERENCES groupes_activites(id_groupe)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    
+  CONSTRAINT fk_pa_academic_year
+    FOREIGN KEY (academic_year_id)
+    REFERENCES academic_years(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE galerie (

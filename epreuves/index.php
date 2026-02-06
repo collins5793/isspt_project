@@ -8,7 +8,7 @@ $isAdmin = isset($_SESSION['admin_id']);
 $isEtudiant = isset($_SESSION['etudiant_id']);
 
 if (!$isAdmin && !$isEtudiant) {
-    // Si ni admin ni étudiant n’est connecté → redirection
+    // Si ni admin ni étudiant n'est connecté → redirection
     header("Location: ../etudiant/login_etudiant.php");
     exit;
 }
@@ -68,822 +68,769 @@ $epreuves = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📚 Recueil d'Épreuves Universitaires</title>
 <link rel="stylesheet" href="assets/css/index.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-    /* =============================================
-   RECUEIL D'ÉPREUVES UNIVERSITAIRES
-   STYLE PREMIUM & MODERNE
-   ============================================= */
+/* ==========================================================================
+   THEME PREMIUM - RECUEIL D'ÉPREUVES UNIVERSITAIRES
+   Design moderne avec animations élégantes
+   ========================================================================== */
 
-/* ==================== VARIABLES CSS ==================== */
 :root {
-  /* Couleurs principales */
-  --color-primary: rgb(8, 0, 32);
-  --color-accent: rgb(186, 40, 30);
-  --color-text: #ffffff;
-  --color-text-light: #cccccc;
-  --color-dark: #0f0a2c;
-  
-  /* Couleurs supplémentaires */
-  --color-glass: rgba(255, 255, 255, 0.08);
-  --color-glass-dark: rgba(0, 0, 0, 0.3);
-  --color-overlay: rgba(186, 40, 30, 0.1);
-  
-  /* Typographie */
-  --font-primary: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Montserrat', 'Arial Black', sans-serif;
-  
-  /* Espacements */
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 1rem;
-  --spacing-md: 1.5rem;
-  --spacing-lg: 2rem;
-  --spacing-xl: 3rem;
-  --spacing-xxl: 5rem;
-  
-  /* Bordures */
-  --border-radius-sm: 6px;
-  --border-radius-md: 10px;
-  --border-radius-lg: 16px;
-  --border-radius-xl: 24px;
-  
-  /* Ombres */
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.15);
-  --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.25);
-  --shadow-heavy: 0 15px 50px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 25px rgba(186, 40, 30, 0.3);
-  
-  /* Transitions */
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Palette de couleurs premium */
+    --primary-dark: rgb(8, 0, 32);
+    --primary-darker: rgb(5, 0, 20);
+    --accent-red: rgb(186, 40, 30);
+    --accent-red-light: rgba(186, 40, 30, 0.1);
+    --accent-gold: #FFD700;
+    --accent-teal: #20c997;
+    
+    /* Couleurs UI */
+    --text-white: #ffffff;
+    --text-light: rgba(255, 255, 255, 0.85);
+    --text-muted: rgba(255, 255, 255, 0.6);
+    
+    /* Effets glassmorphism */
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    
+    /* Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* ==================== RESET & BASE ==================== */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
-  font-family: var(--font-primary);
-  background: var(--color-primary);
-  color: var(--color-text);
-  line-height: 1.7;
-  overflow-x: hidden;
-  min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(186, 40, 30, 0.1) 0%, transparent 20%),
-    radial-gradient(circle at 90% 80%, rgba(186, 40, 30, 0.05) 0%, transparent 20%);
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-md);
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    background: var(--primary-dark);
+    color: var(--text-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(186, 40, 30, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 20%, rgba(8, 0, 32, 0.8) 0%, transparent 40%),
+        linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
 }
 
 /* ==================== ANIMATIONS ==================== */
-@keyframes fadeIn {
-  from {
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(186, 40, 30, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(186, 40, 30, 0.6); }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+/* ==================== HEADER HERO ==================== */
+.hero-section {
+    position: relative;
+    padding: 5rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, 
+        rgba(8, 0, 32, 0.9) 0%, 
+        rgba(186, 40, 30, 0.15) 100%);
+    overflow: hidden;
+    animation: fadeInUp 1s ease-out;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.05)"/></svg>'),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="1" fill="rgba(186,40,30,0.1)"/></svg>');
+    background-size: 50px 50px, 30px 30px;
+    animation: float 20s infinite linear;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fff 0%, var(--accent-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: slideIn 1s ease-out;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
     opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+    animation: fadeInUp 1s ease-out 0.3s forwards;
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* ==================== FILTRES AVANCÉS ==================== */
+.filters-container {
+    max-width: 1200px;
+    margin: -2rem auto 3rem;
+    padding: 0 2rem;
 }
 
-@keyframes fadeDown {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.filters-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--glass-shadow);
+    animation: fadeInUp 1s ease-out 0.5s both;
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-@keyframes glowPulse {
-  0%, 100% {
-    box-shadow: var(--shadow-medium);
-  }
-  50% {
-    box-shadow: var(--shadow-glow);
-  }
+.filter-group {
+    position: relative;
 }
 
-@keyframes vibrate {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px);
-  }
-  75% {
-    transform: translateX(2px);
-  }
+.filter-group label {
+    display: block;
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-@keyframes rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.filter-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--text-white);
+    font-size: 1rem;
+    transition: var(--transition-smooth);
 }
 
-/* Classes d'animation */
-.fade-in {
-  animation: fadeIn 0.8s var(--transition-slow) both;
+.filter-input:focus {
+    outline: none;
+    border-color: var(--accent-red);
+    background: rgba(186, 40, 30, 0.1);
+    transform: translateY(-2px);
 }
 
-.fade-up {
-  animation: fadeUp 0.6s var(--transition-slow) both;
+.filter-input::placeholder {
+    color: var(--text-muted);
 }
 
-.fade-down {
-  animation: fadeDown 0.6s var(--transition-slow) both;
+.filters-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.scale-in {
-  animation: scaleIn 0.4s var(--transition-slow) both;
+.btn-filter {
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, var(--accent-red) 0%, #c53030 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-/* ==================== 1️⃣ HEADER ==================== */
-header {
-  text-align: center;
-  padding: var(--spacing-xxl) var(--spacing-md);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-dark) 100%);
-  position: relative;
-  overflow: hidden;
-  animation: fadeIn 1s var(--transition-slow);
-}
-
-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(ellipse at 20% 50%, rgba(186, 40, 30, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(186, 40, 30, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-}
-
-header h1 {
-  font-family: var(--font-heading);
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
-  font-weight: 800;
-  margin-bottom: var(--spacing-md);
-  text-shadow: 0 0 20px rgba(186, 40, 30, 0.3);
-  position: relative;
-  z-index: 2;
-}
-
-header p {
-  font-size: 1.2rem;
-  color: var(--color-text-light);
-  max-width: 600px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 2;
-  font-weight: 300;
-}
-
-/* ==================== 2️⃣ FORMULAIRE DE FILTRES ==================== */
-.filters {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
-  flex-wrap: wrap;
-  background: var(--color-glass);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
-  margin: var(--spacing-xl) 0;
-  animation: fadeUp 0.8s var(--transition-slow) both;
-}
-
-.filters > div {
-  flex: 1;
-  display: flex;
-  gap: var(--spacing-sm);
-  flex-wrap: wrap;
-}
-
-.filters input,
-.filters select {
-  flex: 1;
-  min-width: 150px;
-  padding: var(--spacing-sm);
-  background: var(--color-glass-dark);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius-md);
-  color: var(--color-text);
-  font-size: 0.95rem;
-  transition: var(--transition-normal);
-}
-
-.filters input::placeholder {
-  color: var(--color-text-light);
-}
-
-.filters input:focus,
-.filters select:focus {
-  outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(186, 40, 30, 0.2);
-}
-
-.filters input:hover,
-.filters select:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.admin-buttons {
-  display: flex;
-  gap: var(--spacing-sm);
-  align-items: center;
-}
-
-/* Boutons */
-button,
-.btn-add {
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background: var(--color-accent);
-  color: var(--color-text);
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-normal);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  font-size: 0.9rem;
-}
-
-button:hover,
-.btn-add:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+.btn-filter:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(186, 40, 30, 0.4);
+    animation: glow 2s infinite;
 }
 
 .btn-add {
-  background: transparent;
-  border: 2px solid var(--color-accent);
+    padding: 0.8rem 1.5rem;
+    background: transparent;
+    border: 2px solid var(--accent-teal);
+    color: var(--accent-teal);
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .btn-add:hover {
-  background: var(--color-accent);
+    background: var(--accent-teal);
+    color: var(--primary-dark);
+    transform: translateY(-3px);
 }
 
-/* Message de confirmation */
-[style*="background:#d4edda"] {
-  background: rgba(76, 175, 80, 0.2) !important;
-  color: #4caf50 !important;
-  padding: var(--spacing-md) !important;
-  border-radius: var(--border-radius-md) !important;
-  border: 1px solid rgba(76, 175, 80, 0.3) !important;
-  margin: var(--spacing-md) 0 !important;
-  animation: fadeIn 0.5s ease !important;
+/* ==================== GRILLE DE CARTES ==================== */
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem 4rem;
 }
 
-/* ==================== 3️⃣ GRILLE DES CARTES PDF ==================== */
 .epreuve-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--spacing-lg);
-  margin: var(--spacing-xl) 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
 .epreuve-card {
-  background: var(--color-glass);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-lg);
-  transition: var(--transition-normal);
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  animation: fadeUp 0.6s var(--transition-slow) both;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: var(--transition-bounce);
+    position: relative;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
 }
 
-.epreuve-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--color-accent), transparent);
-  transform: scaleX(0);
-  transition: var(--transition-normal);
-}
+.epreuve-card:nth-child(2) { animation-delay: 0.1s; }
+.epreuve-card:nth-child(3) { animation-delay: 0.2s; }
+.epreuve-card:nth-child(4) { animation-delay: 0.3s; }
+.epreuve-card:nth-child(5) { animation-delay: 0.4s; }
 
 .epreuve-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: var(--shadow-heavy);
-  border-color: var(--color-accent);
+    transform: translateY(-15px) scale(1.02);
+    border-color: var(--accent-red);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(186, 40, 30, 0.3);
 }
 
-.epreuve-card:hover::before {
-  transform: scaleX(1);
+.card-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: var(--transition-smooth);
 }
 
-/* Image de la carte */
-.epreuve-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: var(--border-radius-md);
-  margin-bottom: var(--spacing-md);
-  transition: var(--transition-normal);
+.epreuve-card:hover .card-image {
+    transform: scale(1.05);
 }
 
-.epreuve-card:hover img {
-  transform: scale(1.05);
+.card-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--accent-red);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    animation: float 3s infinite ease-in-out;
 }
 
-/* En-tête de carte */
-.epreuve-card-header {
-  font-family: var(--font-heading);
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text);
-  line-height: 1.4;
+.card-content {
+    padding: 1.5rem;
 }
 
-/* Badges */
-.badge {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-right: var(--spacing-xs);
-  margin-bottom: var(--spacing-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+    color: var(--text-white);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-.badge-type {
-  background: rgba(186, 40, 30, 0.2);
-  color: var(--color-accent);
-  border: 1px solid rgba(186, 40, 30, 0.3);
+.card-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
 }
 
-.badge-niveau {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-light);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
 }
 
-/* Pied de carte */
-.epreuve-card-footer {
-  color: var(--color-text-light);
-  font-size: 0.9rem;
-  margin: var(--spacing-md) 0;
-  padding-top: var(--spacing-sm);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.meta-item i {
+    color: var(--accent-teal);
 }
 
-/* Bouton téléchargement */
-.btn-download {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--color-accent);
-  color: var(--color-text);
-  text-decoration: none;
-  border-radius: var(--border-radius-md);
-  font-weight: 600;
-  transition: var(--transition-normal);
-  width: 100%;
-  justify-content: center;
-  margin-top: var(--spacing-sm);
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.btn-download:hover {
-  background: rgba(186, 40, 30, 0.9);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-medium);
+.filiere-tag {
+    background: rgba(186, 40, 30, 0.2);
+    color: var(--accent-red);
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
 }
 
-/* ==================== 4️⃣ ACTIONS ADMIN ==================== */
+.btn-view {
+    background: transparent;
+    border: 2px solid var(--accent-teal);
+    color: var(--accent-teal);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-view:hover {
+    background: var(--accent-teal);
+    color: var(--primary-dark);
+    transform: translateX(5px);
+}
+
+/* ==================== ADMIN ACTIONS ==================== */
 .admin-actions {
-  position: absolute;
-  top: var(--spacing-md);
-  right: var(--spacing-md);
-  display: flex;
-  gap: var(--spacing-xs);
-  z-index: 10;
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
 }
 
-.btn-edit,
-.btn-delete {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: var(--transition-normal);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 1rem;
+.admin-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+    backdrop-filter: blur(10px);
 }
 
-.btn-edit {
-  background: rgba(33, 150, 243, 0.2);
-  color: #2196f3;
-}
-
-.btn-delete {
-  background: rgba(244, 67, 54, 0.2);
-  color: #f44336;
+.admin-btn:hover {
+    transform: scale(1.1) rotate(5deg);
 }
 
 .btn-edit:hover {
-  background: #2196f3;
-  color: white;
-  transform: scale(1.1);
-  animation: vibrate 0.3s ease;
+    background: var(--accent-teal);
+    color: var(--primary-dark);
 }
 
 .btn-delete:hover {
-  background: #f44336;
-  color: white;
-  transform: scale(1.1);
-  animation: vibrate 0.3s ease;
+    background: var(--accent-red);
+    color: white;
 }
 
-/* ==================== 5️⃣ MODAL ==================== */
-.modal-epreuve {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.3s ease;
+/* ==================== MODAL ==================== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInUp 0.3s ease-out;
 }
 
 .modal-content {
-  background: var(--color-glass);
-  backdrop-filter: blur(30px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius-lg);
-  padding: var(--spacing-xl);
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-  animation: scaleIn 0.3s var(--transition-slow);
-  box-shadow: var(--shadow-heavy);
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: fadeInUp 0.4s ease-out 0.1s both;
 }
 
 .modal-close {
-  position: absolute;
-  top: var(--spacing-md);
-  right: var(--spacing-md);
-  font-size: 2rem;
-  cursor: pointer;
-  color: var(--color-text-light);
-  transition: var(--transition-normal);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-close:hover {
-  color: var(--color-accent);
-  background: rgba(255, 255, 255, 0.1);
-  transform: rotate(90deg);
+    color: var(--accent-red);
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
 }
 
-.modal-content h2 {
-  font-family: var(--font-heading);
-  font-size: 1.8rem;
-  margin-bottom: var(--spacing-md);
-  color: var(--color-text);
+.modal-header {
+    margin-bottom: 2rem;
 }
 
-.modal-content p {
-  margin-bottom: var(--spacing-sm);
-  color: var(--color-text-light);
-  line-height: 1.6;
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-white);
 }
 
-.modal-content strong {
-  color: var(--color-text);
+.modal-subtitle {
+    color: var(--text-light);
+    font-size: 1rem;
 }
 
-/* ==================== 6️⃣ FOOTER ==================== */
-footer {
-  background: var(--color-primary);
-  color: var(--color-text-light);
-  padding: var(--spacing-xxl) 0 var(--spacing-xl);
-  margin-top: var(--spacing-xxl);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.modal-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
 }
 
-.footer-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: var(--spacing-xl);
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-md);
+.detail-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 12px;
 }
 
-.footer-column h3 {
-  color: var(--color-accent);
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  margin-bottom: var(--spacing-md);
-  position: relative;
+.detail-label {
+    display: block;
+    color: var(--accent-gold);
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
-.footer-column h3::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 30px;
-  height: 2px;
-  background: var(--color-accent);
-  border-radius: 1px;
+.detail-value {
+    color: var(--text-white);
+    font-weight: 500;
 }
 
-.footer-column ul {
-  list-style: none;
+.modal-description {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    color: var(--text-light);
 }
 
-.footer-column ul li {
-  margin-bottom: var(--spacing-sm);
-}
-
-.footer-column a {
-  color: var(--color-text-light);
-  text-decoration: none;
-  transition: var(--transition-normal);
-  position: relative;
-  padding-bottom: 2px;
-}
-
-.footer-column a::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background: var(--color-accent);
-  transition: var(--transition-normal);
-}
-
-.footer-column a:hover {
-  color: var(--color-text);
-}
-
-.footer-column a:hover::after {
-  width: 100%;
-}
-
-.social-icons {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-md);
-}
-
-.social-icons a {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--color-glass);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-normal);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.social-icons a:hover {
-  background: var(--color-accent);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-glow);
-}
-
-/* ==================== RESPONSIVE DESIGN ==================== */
-@media (max-width: 900px) {
-  .epreuve-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-  
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .filters > div {
-    flex-direction: column;
-  }
-  
-  .admin-buttons {
-    justify-content: center;
-    margin-top: var(--spacing-md);
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  :root {
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.75rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-xxl: 3rem;
-  }
-  
-  .epreuve-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .filters input,
-  .filters select {
-    min-width: 100%;
-  }
-  
-  .footer-content {
-    grid-template-columns: 1fr;
+.btn-modal-download {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--accent-red) 0%, #c53030 100%);
+    color: white;
     text-align: center;
-  }
-  
-  .footer-column h3::after {
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  .social-icons {
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
     justify-content: center;
-  }
-  
-  .modal-content {
-    padding: var(--spacing-lg);
-    margin: var(--spacing-md);
-  }
+    gap: 0.5rem;
 }
 
-/* ==================== ACCESSIBILITÉ ==================== */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.btn-modal-download:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(186, 40, 30, 0.4);
+    animation: glow 2s infinite;
 }
 
-/* Focus visible pour accessibilité */
-button:focus-visible,
-.btn-add:focus-visible,
-.btn-download:focus-visible,
-.filters input:focus-visible,
-.filters select:focus-visible,
-.modal-close:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+/* ==================== MESSAGES D'ALERTE ==================== */
+.alert-success {
+    background: rgba(72, 187, 120, 0.2);
+    border: 1px solid rgba(72, 187, 120, 0.3);
+    color: #48bb78;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 1200px;
+    animation: fadeInUp 0.5s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-/* État de chargement (skeleton) */
-.skeleton {
-  background: linear-gradient(90deg, var(--color-glass) 25%, rgba(255,255,255,0.1) 50%, var(--color-glass) 75%);
-  background-size: 200% 100%;
-  animation: loading 1.5s infinite;
+.no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
 }
 
-@keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+.no-results i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--accent-red);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 3rem 1rem;
+    }
+    
+    .filters-container {
+        padding: 0 1rem;
+        margin-top: -1rem;
+    }
+    
+    .filters-card {
+        padding: 1.5rem;
+    }
+    
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .epreuve-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .main-container {
+        padding: 0 1rem 2rem;
+    }
+    
+    .filters-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .btn-filter, .btn-add {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .modal-content {
+        padding: 1.5rem;
+        width: 95%;
+    }
+    
+    .modal-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== ANIMATIONS DE SCROLL ==================== */
+.scroll-animate {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-animate.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 </style>
 </head>
 <body>
     <?php include "../includes/header.php"; ?>
 
-<header>
-    <h1>📚 Recueil d’Épreuves Universitaires</h1>
-    <p>Consultez, recherchez et téléchargez les anciennes épreuves par filière et année.</p>
-</header>
-
-<div class="container">
-
-    <!-- Barre de recherche et filtres -->
-    <form method="GET" class="filters">
-        <div style="flex:1; display:flex; gap:10px; flex-wrap:wrap;">
-            <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Rechercher titre ou matière">
-            <select name="filiere">
-                <option value="">Filière</option>
-                <option value="SIL" <?= $filiere=="SIL"?"selected":"" ?>>SIL</option>
-                <option value="RIT" <?= $filiere=="RIT"?"selected":"" ?>>RIT</option>
-                <option value="GIT" <?= $filiere=="GIT"?"selected":"" ?>>GIT</option>
-            </select>
-            <select name="annee">
-                <option value="">Année</option>
-                <option value="2024-2025" <?= $annee=="2024-2025"?"selected":"" ?>>2024-2025</option>
-                <option value="2023-2024" <?= $annee=="2023-2024"?"selected":"" ?>>2023-2024</option>
-                <option value="2022-2023" <?= $annee=="2022-2023"?"selected":"" ?>>2022-2023</option>
-            </select>
-            <select name="type">
-                <option value="">Type</option>
-                <option value="Examen national" <?= $type=="Examen national"?"selected":"" ?>>Examen national</option>
-                <option value="Partiel" <?= $type=="Partiel"?"selected":"" ?>>Partiel</option>
-                <option value="TP" <?= $type=="TP"?"selected":"" ?>>TP</option>
-                <option value="Devoir surveillé" <?= $type=="Devoir surveillé"?"selected":"" ?>>Devoir surveillé</option>
-            </select>
-            <select name="niveau">
-                <option value="">Niveau</option>
-                <option value="1ère année" <?= $niveau=="1ère année"?"selected":"" ?>>1ère année</option>
-                <option value="2ème année" <?= $niveau=="2ème année"?"selected":"" ?>>2ème année</option>
-                <option value="3ème année" <?= $niveau=="3ème année"?"selected":"" ?>>3ème année</option>
-                <option value="autre" <?= $niveau=="autre"?"selected":"" ?>>Autre</option>
-            </select>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">
+            <i class="fas fa-graduation-cap"></i> 
+            Recueil d'Épreuves Universitaires
+        </h1>
+        <p class="hero-subtitle">
+            Explorez notre collection premium d'épreuves académiques. 
+            Recherchez, filtrez et téléchargez en un clic.
+        </p>
+        <div class="hero-stats">
+            <span class="stat">
+                <i class="fas fa-book-open"></i>
+                <?= count($epreuves) ?> Épreuves disponibles
+            </span>
         </div>
-        <div class="admin-buttons">
-            <button type="submit">Filtrer</button>
+    </div>
+</section>
+
+<!-- Filtres -->
+<div class="filters-container">
+    <form method="GET" class="filters-card scroll-animate">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label><i class="fas fa-search"></i> Recherche</label>
+                <input type="text" 
+                       name="search" 
+                       value="<?= htmlspecialchars($search) ?>" 
+                       placeholder="Titre, matière, professeur..."
+                       class="filter-input">
+            </div>
+            
+            <div class="filter-group">
+                <label><i class="fas fa-graduation-cap"></i> Filière</label>
+                <select name="filiere" class="filter-input">
+                    <option value="">Toutes les filières</option>
+                    <option value="SIL" <?= $filiere=="SIL"?"selected":"" ?>>SIL</option>
+                    <option value="RIT" <?= $filiere=="RIT"?"selected":"" ?>>RIT</option>
+                    <option value="GIT" <?= $filiere=="GIT"?"selected":"" ?>>GIT</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><i class="fas fa-calendar-alt"></i> Année</label>
+                <select name="annee" class="filter-input">
+                    <option value="">Toutes les années</option>
+                    <option value="2024-2025" <?= $annee=="2024-2025"?"selected":"" ?>>2024-2025</option>
+                    <option value="2023-2024" <?= $annee=="2023-2024"?"selected":"" ?>>2023-2024</option>
+                    <option value="2022-2023" <?= $annee=="2022-2023"?"selected":"" ?>>2022-2023</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><i class="fas fa-file-alt"></i> Type</label>
+                <select name="type" class="filter-input">
+                    <option value="">Tous les types</option>
+                    <option value="Examen national" <?= $type=="Examen national"?"selected":"" ?>>Examen national</option>
+                    <option value="Partiel" <?= $type=="Partiel"?"selected":"" ?>>Partiel</option>
+                    <option value="TP" <?= $type=="TP"?"selected":"" ?>>TP</option>
+                    <option value="Devoir surveillé" <?= $type=="Devoir surveillé"?"selected":"" ?>>Devoir surveillé</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label><i class="fas fa-layer-group"></i> Niveau</label>
+                <select name="niveau" class="filter-input">
+                    <option value="">Tous les niveaux</option>
+                    <option value="1ère année" <?= $niveau=="1ère année"?"selected":"" ?>>1ère année</option>
+                    <option value="2ème année" <?= $niveau=="2ème année"?"selected":"" ?>>2ème année</option>
+                    <option value="3ème année" <?= $niveau=="3ème année"?"selected":"" ?>>3ème année</option>
+                    <option value="autre" <?= $niveau=="autre"?"selected":"" ?>>Autre</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="filters-actions">
+            <button type="submit" class="btn-filter">
+                <i class="fas fa-filter"></i> Appliquer les filtres
+            </button>
+            
             <?php if ($isAdmin): ?>
-                <a href="ajouter_epreuve.php" class="btn-add">+ Ajouter</a>
+                <a href="ajouter_epreuve.php" class="btn-add">
+                    <i class="fas fa-plus-circle"></i> Ajouter une épreuve
+                </a>
             <?php endif; ?>
         </div>
     </form>
-    <?php if (isset($_GET['message']) && $_GET['message'] === 'supprime'): ?>
-        <p style="background:#d4edda; color:#155724; padding:10px; border-radius:5px;">✅ Épreuve supprimée avec succès.</p>
-    <?php endif; ?>
+</div>
 
-    <!-- Cards -->
-    <div class="epreuve-grid">
-        <?php if (!empty($epreuves)): ?>
+<!-- Messages -->
+<?php if (isset($_GET['message']) && $_GET['message'] === 'supprime'): ?>
+    <div class="alert-success scroll-animate">
+        <i class="fas fa-check-circle"></i>
+        Épreuve supprimée avec succès
+    </div>
+<?php endif; ?>
+
+<!-- Grille des épreuves -->
+<div class="main-container">
+    <?php if (!empty($epreuves)): ?>
+        <div class="epreuve-grid">
             <?php foreach($epreuves as $row): 
                 $thumbPath = '../admins/epreuve/uploads/thumbs/' . pathinfo($row['file_path'], PATHINFO_FILENAME) . '.jpg';
                 if(!file_exists($thumbPath)) $thumbPath = '../admins/epreuve/uploads/thumbs/pdf-icon.jpg';
             ?>
-            <div class="epreuve-card"
+            <div class="epreuve-card scroll-animate"
                 data-titre="<?= htmlspecialchars($row['titre']) ?>"
                 data-filiere="<?= htmlspecialchars($row['nom_filiere']) ?>"
                 data-annee="<?= htmlspecialchars($row['annee_univ']) ?>"
@@ -892,71 +839,189 @@ button:focus-visible,
                 data-description="<?= htmlspecialchars($row['description']) ?>"
                 data-file="<?= htmlspecialchars($row['file_path']) ?>">
                 
-                <img src="<?= $thumbPath ?>" alt="PDF" style="width:100%; height:200px; object-fit:cover; border-radius:5px; margin-bottom:10px;">
+                <span class="card-badge">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </span>
                 
                 <?php if ($isAdmin): ?>
                 <div class="admin-actions">
-                    <a href="modifier_epreuve.php?id=<?= $row['id_epreuve'] ?>" class="btn-edit" title="Modifier">✏️</a>
-                    <a href="supprimer_epreuve.php?id=<?= $row['id_epreuve'] ?>" class="btn-delete" onclick="return confirm('Supprimer cette épreuve ?');" title="Supprimer">🗑️</a>
+                    <a href="../admins/epreuve/modifier_epreuve.php?id=<?= $row['id_epreuve'] ?>" 
+                       class="admin-btn btn-edit" 
+                       title="Modifier">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a href="../admins/epreuve/supprimer_epreuve.php?id=<?= $row['id_epreuve'] ?>" 
+                       class="admin-btn btn-delete" 
+                       onclick="return confirm('Supprimer cette épreuve ?');" 
+                       title="Supprimer">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
                 </div>
                 <?php endif; ?>
-
-                <div class="epreuve-card-header"><?= htmlspecialchars($row['titre']) ?></div>
-                <div>
-                    <span class="badge badge-type"><?= htmlspecialchars($row['type_epreuve']) ?></span>
-                    <span class="badge badge-niveau"><?= htmlspecialchars($row['niveau']) ?></span>
+                
+                <img src="<?= $thumbPath ?>" 
+                     alt="<?= htmlspecialchars($row['titre']) ?>" 
+                     class="card-image">
+                
+                <div class="card-content">
+                    <h3 class="card-title"><?= htmlspecialchars($row['titre']) ?></h3>
+                    
+                    <div class="card-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-university"></i>
+                            <?= htmlspecialchars($row['type_epreuve']) ?>
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-user-graduate"></i>
+                            <?= htmlspecialchars($row['niveau']) ?>
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-calendar"></i>
+                            <?= htmlspecialchars($row['annee_univ']) ?>
+                        </span>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <span class="filiere-tag">
+                            <?= htmlspecialchars($row['nom_filiere']) ?>
+                        </span>
+                        <a href="#" class="btn-view open-modal">
+                            <i class="fas fa-eye"></i> Voir détails
+                        </a>
+                    </div>
                 </div>
-                <div class="epreuve-card-footer"><?= htmlspecialchars($row['nom_filiere']) ?> | <?= htmlspecialchars($row['annee_univ']) ?></div>
-                <a id="modal-download" class="btn-download" href="#" download>🔽 Télécharger</a>
             </div>
             <?php endforeach; ?>
-        <?php else: ?>
-            <p>Aucune épreuve trouvée.</p>
-        <?php endif; ?>
-    </div>
+        </div>
+    <?php else: ?>
+        <div class="no-results scroll-animate">
+            <i class="fas fa-search"></i>
+            <h3>Aucune épreuve trouvée</h3>
+            <p>Essayez de modifier vos critères de recherche</p>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Modal -->
-<div class="modal-epreuve" id="modal-epreuve">
+<div class="modal-overlay" id="modal-overlay">
     <div class="modal-content">
-        <span class="modal-close" id="modal-close">&times;</span>
-        <h2 id="modal-titre"></h2>
-        <p><strong>Filière:</strong> <span id="modal-filiere"></span></p>
-        <p><strong>Année:</strong> <span id="modal-annee"></span></p>
-        <p><strong>Type:</strong> <span id="modal-type"></span></p>
-        <p><strong>Niveau:</strong> <span id="modal-niveau"></span></p>
-        <p id="modal-description"></p>
-        <a id="modal-download" class="btn-download" href="#" download>🔽 Télécharger</a>
+        <button class="modal-close" id="modal-close">&times;</button>
+        
+        <div class="modal-header">
+            <h2 class="modal-title" id="modal-titre"></h2>
+            <p class="modal-subtitle" id="modal-subtitle"></p>
+        </div>
+        
+        <div class="modal-details">
+            <div class="detail-item">
+                <span class="detail-label">Filière</span>
+                <span class="detail-value" id="modal-filiere"></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Année universitaire</span>
+                <span class="detail-value" id="modal-annee"></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Type d'épreuve</span>
+                <span class="detail-value" id="modal-type"></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Niveau</span>
+                <span class="detail-value" id="modal-niveau"></span>
+            </div>
+        </div>
+        
+        <div class="modal-description">
+            <h4>Description</h4>
+            <p id="modal-description"></p>
+        </div>
+        
+        <a id="modal-download" class="btn-modal-download" href="#" download>
+            <i class="fas fa-download"></i> Télécharger le PDF
+        </a>
     </div>
 </div>
 
 <?php include "../includes/footer.php"; ?>
 
-
-
 <script>
-const cards = document.querySelectorAll('.epreuve-card');
-const modal = document.getElementById('modal-epreuve');
-const modalClose = document.getElementById('modal-close');
+// Animation au scroll
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, {
+    threshold: 0.1
+});
 
-cards.forEach(card => {
-    card.addEventListener('click', (e) => {
-        // empêcher que cliquer sur les boutons admin ouvre le modal
-        if (e.target.closest('.btn-edit') || e.target.closest('.btn-delete')) return;
-        document.getElementById('modal-titre').innerText = card.dataset.titre;
-        document.getElementById('modal-filiere').innerText = card.dataset.filiere;
-        document.getElementById('modal-annee').innerText = card.dataset.annee;
-        document.getElementById('modal-type').innerText = card.dataset.type;
-        document.getElementById('modal-niveau').innerText = card.dataset.niveau;
-        document.getElementById('modal-description').innerText = card.dataset.description;
+document.querySelectorAll('.scroll-animate').forEach((el) => {
+    observer.observe(el);
+});
+
+// Modal functionality
+document.querySelectorAll('.open-modal').forEach(button => {
+    button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const card = button.closest('.epreuve-card');
+        
+        document.getElementById('modal-titre').textContent = card.dataset.titre;
+        document.getElementById('modal-filiere').textContent = card.dataset.filiere;
+        document.getElementById('modal-annee').textContent = card.dataset.annee;
+        document.getElementById('modal-type').textContent = card.dataset.type;
+        document.getElementById('modal-niveau').textContent = card.dataset.niveau;
+        document.getElementById('modal-description').textContent = card.dataset.description || 'Aucune description disponible';
         document.getElementById('modal-download').href = '../admins/epreuve/uploads/' + card.dataset.file;
-        modal.style.display = 'flex';
+        
+        // Mettre à jour le sous-titre
+        document.getElementById('modal-subtitle').textContent = 
+            `${card.dataset.filiere} • ${card.dataset.annee}`;
+        
+        document.getElementById('modal-overlay').style.display = 'flex';
     });
 });
 
-modalClose.addEventListener('click', () => modal.style.display = 'none');
-window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
-</script>
+// Close modal
+document.getElementById('modal-close').addEventListener('click', () => {
+    document.getElementById('modal-overlay').style.display = 'none';
+});
 
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modal-overlay')) {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+});
+
+// Effet de recherche en direct sur les cartes
+const searchInput = document.querySelector('input[name="search"]');
+const cards = document.querySelectorAll('.epreuve-card');
+
+searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    
+    cards.forEach(card => {
+        const title = card.querySelector('.card-title').textContent.toLowerCase();
+        const filiere = card.querySelector('.filiere-tag').textContent.toLowerCase();
+        const type = card.dataset.type.toLowerCase();
+        
+        const matches = title.includes(searchTerm) || 
+                       filiere.includes(searchTerm) || 
+                       type.includes(searchTerm);
+        
+        card.style.display = matches ? 'block' : 'none';
+    });
+});
+
+// Animation au chargement
+window.addEventListener('load', () => {
+    document.body.style.opacity = 0;
+    document.body.style.transition = 'opacity 0.5s ease-in';
+    
+    setTimeout(() => {
+        document.body.style.opacity = 1;
+    }, 100);
+});
+</script>
 </body>
 </html>

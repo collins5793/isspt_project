@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once '../../includes/db.php'; // connexion PDO
+require_once '../includes/db.php'; // connexion PDO
 
 // Vérifier admin
 // if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
