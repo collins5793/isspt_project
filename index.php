@@ -906,12 +906,13 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
             </div>
             
             <div class="cgu-links">
-                <a href="politique_confidentialite.php" class="cgu-link" target="_blank">
-                    <i class="fas fa-user-shield"></i> Politique de confidentialité
+                <a href="politique_condition.php" class="cgu-link" target="_blank">
+                    <i class="fas fa-user-shield"></i> Politique de confidentialité et Conditions d'utilisation
                 </a>
-                <a href="conditions_utilisation.php" class="cgu-link" target="_blank">
-                    <i class="fas fa-file-contract"></i> Conditions d'utilisation
-                </a>
+            </div>
+            
+            <div class="cgu-description">
+                <p>En cliquant sur "J'accepte", vous acceptez les conditions d'utilisation et la politique de confidentialité de l'institut.</p>
             </div>
             
             <div class="cgu-actions">
