@@ -101,10 +101,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
     if($isLogged && $_POST['accept_terms'] == '1') {
         if($user_type === 'etudiant') {
             $stmt = $pdo->prepare("UPDATE etudiants SET accepte_cgu = 1, date_acceptation_cgu = NOW() WHERE id_etudiant = ?");
+            $stmt2 = $pdo->prepare("UPDATE administrateurs SET accepte_cgu = 1, date_acceptation_cgu = NOW() WHERE id_etudiant = ?");
         } else {
             $stmt = $pdo->prepare("UPDATE administrateurs SET accepte_cgu = 1, date_acceptation_cgu = NOW() WHERE id_admin = ?");
         }
         $stmt->execute([$user_id]);
+        $stmt2->execute([$user_id]);
         $accepte_cgu = 1;
     }
     echo json_encode(['success' => true]);
@@ -112,12 +114,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISSPT - Portail Universitaire</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -888,7 +890,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
 <body>
 
     <!-- Popup CGU (visible seulement si non accepté) -->
-    <?php if (!$accepte_cgu && (!isset($_COOKIE['cgu_accepted']) || $_COOKIE['cgu_accepted'] !== 'true')): ?>
+    <?php if (!$accepte_cgu): ?>
     <div class="cgu-overlay" id="cguPopup">
         <div class="cgu-modal">
             <div class="cgu-header">
@@ -900,19 +902,19 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
             </div>
             
             <div class="cgu-content">
-                <p><strong>Bienvenue sur le portail de l'Institut Supérieur Saint Paul Tarse.</strong></p>
+                <p><strong>Bienvenue sur le portail des etudiants de l'Institut Supérieur Saint Paul Tarse.</strong></p>
                 <p>Pour utiliser nos services (modules Épreuves et JET), vous devez accepter nos Conditions Générales d'Utilisation et notre Politique de Confidentialité.</p>
                 <p>Ces documents décrivent comment nous protégeons vos données, vos droits en tant qu'utilisateur, et les règles d'utilisation de notre plateforme.</p>
             </div>
             
             <div class="cgu-links">
-                <a href="politique_condition.php" class="cgu-link" target="_blank">
+                <a href="politique_confidentialite.php" class="cgu-link" target="_blank">
                     <i class="fas fa-user-shield"></i> Politique de confidentialité et Conditions d'utilisation
                 </a>
             </div>
             
             <div class="cgu-description">
-                <p>En cliquant sur "J'accepte", vous acceptez les conditions d'utilisation et la politique de confidentialité de l'institut.</p>
+                <p>En cliquant sur "J'accepte", vous acceptez les conditions d'utilisation et la politique de confidentialité de la plateforme</p>
             </div>
             
             <div class="cgu-actions">
@@ -946,12 +948,12 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
                 
                 <div class="auth-buttons">
                     <?php if(!$isLogged): ?>
-                        <a href="connexion.php" class="btn btn-primary">
+                        <a href="etudiant/login_etudiant.php" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt"></i> Se connecter
                         </a>
-                        <a href="inscription.php" class="btn btn-secondary">
-                            <i class="fas fa-user-plus"></i> Créer un compte
-                        </a>
+                        <!-- <a href="" class="btn btn-secondary">
+                            <i class="fas fa-user-plus"></i>si pas de compte voir le president
+                        </a> -->
                     <?php else: ?>
                         <a href="profil.php" class="btn btn-primary">
                             <i class="fas fa-user-circle"></i> Mon profil
@@ -999,6 +1001,8 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
                 </div>
             </div>
         </section>
+                                <h3><?= $accepte_cgu ?></h3>
+
 
         <!-- Actualités Section -->
         <?php if ($president): ?>
@@ -1009,7 +1013,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
                 <?php if (!empty($actualites)): ?>
                     <?php foreach ($actualites as $actu): ?>
                     <div class="actualite-card scroll-animate">
-                        <h3><?= htmlspecialchars($actu['titre']) ?></h3>
+                        <h3><?= $accepte_cgu ?></h3>
                         <small>Publié le <?= date("d/m/Y à H:i", strtotime($actu['date_publication'])) ?></small>
                         <p><?= nl2br(htmlspecialchars($actu['contenu'])) ?></p>
                     </div>
@@ -1054,9 +1058,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
     const declineCGU = document.getElementById('declineCGU');
     
     // Vérifier l'état d'acceptation
-    const cguAccepted = <?= $accepte_cgu ? 'true' : 'false' ?> || 
-                       localStorage.getItem('cgu_accepted') === 'true' ||
-                       document.cookie.includes('cgu_accepted=true');
+    const cguAccepted = <?= $isLogged && $accepte_cgu ? 'true' : 'false' ?> || 
+                       (localStorage.getItem('cgu_accepted') === 'true' && <?= !$isLogged ? 'true' : 'false' ?>) ||
+                       (document.cookie.includes('cgu_accepted=true') && <?= !$isLogged ? 'true' : 'false' ?>);
 
     // Fonction pour afficher/masquer le contenu
     function toggleContent() {

@@ -27,7 +27,7 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
     /* ==========================================================================
-       PAGE POLITIQUE & CONDITIONS PREMIUM - ISS-PT
+       PAGE POLITIQUE & CONDITIONS PREMIUM - ISSPT
        Design élégant avec animations fluides
        ========================================================================== */
     
@@ -773,7 +773,7 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
                 Politique de Confidentialité & Conditions d'Utilisation
             </h1>
             <p class="hero-subtitle">
-                Informations importantes concernant l'utilisation de nos services et la protection de vos données à l'Institut Supérieur Saint Paul Tarse
+                Informations importantes concernant l'utilisation de nos services et la protection de vos données sur la plateforme des etudiants de l'Institut Supérieur Saint Paul Tarse
             </p>
             
             <div class="hero-info">
@@ -810,7 +810,7 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
                     </div>
                     <h3 class="nav-title">Conditions d'Utilisation</h3>
                     <p class="nav-description">
-                        Règles et obligations pour l'utilisation des modules Épreuves et JET de l'ISS-PT
+                        Règles et obligations pour l'utilisation des modules Épreuves et JET de l'ISSPT
                     </p>
                 </div>
                 
@@ -902,14 +902,14 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
                         <h3 class="article-title">Acceptation des conditions</h3>
                     </div>
                     <div class="article-content">
-                        <p>En accédant et en utilisant les services de l'Institut Supérieur Saint Paul Tarse (ISS-PT), vous acceptez d'être lié par les présentes conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser nos services.</p>
+                        <p>En accédant et en utilisant les services de la plateforme des etudiants de l'Institut Supérieur Saint Paul Tarse (ISSPT), vous acceptez d'être lié par les présentes conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser nos services.</p>
                         
                         <p>Ces conditions s'appliquent à tous les utilisateurs du site, y compris les étudiants, les enseignants, les administrateurs et les visiteurs.</p>
                         
                         <div class="important-note">
                             <div class="note-content">
                                 <div class="note-title">Important</div>
-                                <p>L'utilisation des modules Épreuves et JET est strictement réservée aux membres de la communauté de l'ISS-PT. Toute utilisation non autorisée est interdite.</p>
+                                <p>L'utilisation des modules Épreuves et JET est strictement réservée aux membres de la communauté de l'ISSPT. Toute utilisation non autorisée est interdite.</p>
                             </div>
                         </div>
                     </div>
@@ -922,14 +922,14 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
                         <h3 class="article-title">Description des services</h3>
                     </div>
                     <div class="article-content">
-                        <p>L'ISS-PT propose deux principaux services en ligne :</p>
+                        <p>L'ISSPT propose deux principaux services en ligne :</p>
                         
                         <ul class="article-list">
                             <li><strong>Module Épreuves :</strong> Recueil complet d'anciennes épreuves universitaires organisé par filière, niveau et année académique. Ce service permet aux étudiants de télécharger des documents pour leurs révisions.</li>
                             <li><strong>Module JET (Journée de l'Étudiant Tarsien) :</strong> Plateforme de gestion des activités et événements annuels incluant l'inscription aux activités, la réservation de tickets et la galerie des éditions précédentes.</li>
                         </ul>
                         
-                        <p>Ces services sont fournis gratuitement à tous les étudiants régulièrement inscrits à l'ISS-PT.</p>
+                        <p>Ces services sont fournis gratuitement à tous les étudiants régulièrement inscrits à l'ISSPT.</p>
                     </div>
                 </div>
                 
@@ -967,14 +967,14 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
                         <h3 class="article-title">Droits d'auteur et propriété intellectuelle</h3>
                     </div>
                     <div class="article-content">
-                        <p>Tous les contenus du module Épreuves (documents, corrigés, sujets) sont la propriété intellectuelle de l'ISS-PT ou de leurs auteurs respectifs.</p>
+                        <p>Tous les contenus du module Épreuves (documents, corrigés, sujets) sont la propriété intellectuelle de l'ISSPT ou de leurs auteurs respectifs.</p>
                         
                         <p>Vous êtes autorisé à :</p>
                         
                         <ul class="article-list">
                             <li>Télécharger les documents pour un usage personnel</li>
                             <li>Utiliser les documents pour vos révisions académiques</li>
-                            <li>Partager les références des documents avec d'autres étudiants de l'ISS-PT</li>
+                            <li>Partager les références des documents avec d'autres étudiants de l'ISSPT</li>
                         </ul>
                         
                         <p>Vous n'êtes PAS autorisé à :</p>
@@ -982,7 +982,7 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
                         <ul class="article-list">
                             <li>Modifier, altérer ou falsifier les documents</li>
                             <li>Vendre, louer ou commercialiser les documents</li>
-                            <li>Distribuer les documents en dehors de la communauté ISS-PT</li>
+                            <li>Distribuer les documents en dehors de la communauté ISSPT</li>
                             <li>Utiliser les documents à des fins illégales ou immorales</li>
                         </ul>
                     </div>

@@ -3,6 +3,8 @@
 
 session_start(); // ⚠️ très important pour $_SESSION
 require_once '../includes/db.php'; // connexion PDO
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
 
 // ---------------------------
 // Vérification si l'utilisateur est connecté

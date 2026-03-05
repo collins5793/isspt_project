@@ -1034,7 +1034,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_question'])) {
                     </div>
                 <?php endif; ?>
                 
-                <!-- <form method="POST" action="" id="questionForm">
+                <form method="POST" action="" id="questionForm">
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="name" class="form-label">
@@ -1093,7 +1093,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_question'])) {
                         <i class="fas fa-paper-plane"></i>
                         <span id="btnText">Envoyer ma question</span>
                     </button>
-                </form> -->
+                </form>
             </div>
         </div>
         

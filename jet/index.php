@@ -1764,13 +1764,6 @@ if ($year_id) {
                 </div>
             <?php endif; ?>
             
-            <?php if(count($activites) > 0): ?>
-            <div class="text-center mt-50">
-                <a href="activites.php" class="btn btn-gold">
-                    <i class="fas fa-plus-circle"></i> Explorer toutes les activités
-                </a>
-            </div>
-            <?php endif; ?>
         </div>
     </section>
 
@@ -1998,7 +1991,7 @@ if ($year_id) {
                     timerEl.parentElement.style.background = "rgba(0, 150, 0, 0.3)";
                     timerEl.parentElement.style.borderColor = "rgba(0, 200, 0, 0.5)";
                     return;
-                }
+                } 
                 
                 const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                 const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

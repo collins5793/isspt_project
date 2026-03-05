@@ -1,3 +1,5 @@
+
+
 <style>
     /* ===== VARIABLES FOOTER ===== */
 :root {
@@ -431,11 +433,11 @@
     <!-- Section 1 : À propos de l'université -->
     <div class="footer-section about">
       <a href="#" class="footer-logo">
-        <img src="../assets/images/logo.png" alt="Logo Université" class="logo-small">
+        <img src="<?= $base_url ?>assets/images/logo.png" alt="Logo Université" class="logo-small">
       </a>
       <h3>À propos</h3>
       <p>
-        Université XYZ – Portail Étudiant. Centralisez et consultez les résultats académiques, activités et anciennes épreuves de manière simple et sécurisée.
+        Université ISSPT – Portail Étudiant. Centralisez et consultez les résultats académiques, activités et anciennes épreuves de manière simple et sécurisée.
       </p>
     </div>
 

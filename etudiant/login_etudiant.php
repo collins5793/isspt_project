@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['etudiant_nom'] = $etudiant['nom'];
             $_SESSION['etudiant_prenom'] = $etudiant['prenom'];
             // Connexion simple étudiant
-            header('Location: index.php'); // Tableau de bord étudiant
+            header('Location: ../index.php'); // Tableau de bord étudiant
             exit;
         }
 

@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../includes/db.php';
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
 
 // Vérification de l'authentification
 $isLogged = false;
@@ -900,6 +902,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
         scrollbar-width: thin;
         scrollbar-color: var(--accent) transparent;
     }
+    .carousel-tracke {
+        gap: 25px;
+        overflow-x: auto;
+        padding: 20px 10px;
+        scroll-behavior: smooth;
+        scrollbar-width: thin;
+        scrollbar-color: var(--accent) transparent;
+    }
 
     .carousel-track::-webkit-scrollbar {
         height: 6px;
@@ -1187,6 +1197,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
         top: 50%;
         transform: translateY(-50%);
         color: #4CAF50;
+        font-weight: bold;
+    }
+
+    .standings-table tbody tr.noqualified {
+        background: rgba(76, 175, 80, 0.1);
+        border-left: 4px solid #d12d2d;
+        position: relative;
+    }
+
+    .standings-table tbody tr.noqualified::before {
+        content: '*';
+        position: absolute;
+        left: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #d12d2d;
         font-weight: bold;
     }
 
@@ -1804,6 +1830,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
 </style>
 </head>
 <body>
+    
 <?php include '../includes/header.php'; ?>
 
 <!-- ============================
@@ -1989,7 +2016,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
     <div class="container">
         <div class="carousel-header">
             <h2 class="section-title">Calendrier des Matchs</h2>
-            <p class="section-subtitle">Suivez tous les matchs de la saison</p>
             <div class="carousel-nav">
                 <button class="carousel-btn prev-btn">
                     <i class="fas fa-chevron-left"></i>
@@ -2076,6 +2102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
                         </button>
                     <?php endforeach; ?>
                 </div>
+                <div class="carousel-tracke" id="matches-carousel">
                 
                 <?php foreach($poules as $i=>$p): ?>
                     <div id="pool-<?= $p['pool_id'] ?>" class="tab-content <?= $i===0?'active':'' ?>">
@@ -2083,6 +2110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
                             <table class="standings-table">
                                 <thead>
                                     <tr>
+                                        <th>Q</th>
                                         <th>#</th>
                                         <th>Équipe</th>
                                         <th>MJ</th>
@@ -2097,7 +2125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
                                 </thead>
                                 <tbody>
                                     <?php foreach($classements[$p['pool_id']] as $idx=>$r): ?>
-                                        <tr class="<?= $idx+1 <= $p['advance_count'] ? 'qualified' : '' ?>">
+                                        <tr class="<?= $idx+1 <= $p['advance_count'] ? 'qualified' : 'noqualified' ?>">
                                             <td class="team-position"><?= $idx+1 ?></td>
                                             <td class="team-name-cell"><?= htmlspecialchars($r['team_name']) ?></td>
                                             <td><?= $r['played'] ?></td>
@@ -2117,6 +2145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
+                </div>
             </div>
         <?php else: ?>
             <p class="section-subtitle">Aucune poule créée pour cette saison</p>
@@ -2147,6 +2176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
             </div>
         </div>
         
+        <div class="carousel-tracke" id="matches-carousel">
         <?php if (!empty($matches)): ?>
             <table class="match-center-table">
                 <thead>
@@ -2198,6 +2228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
         <?php else: ?>
             <p class="section-subtitle">Aucun match disponible pour cette saison</p>
         <?php endif; ?>
+        </div>
     </div>
 </section>
 
@@ -2342,6 +2373,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
 <?php include "../includes/footer.php"; ?>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
     // Gestion des onglets des poules
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2413,15 +2445,6 @@ document.addEventListener('DOMContentLoaded', function() {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
         observer.observe(card);
-    });
-
-    // Effet de parallaxe sur le hero
-    window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-        const hero = document.querySelector('.hero-section');
-        if (hero) {
-            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
-        }
     });
 
     // Compteur pour les matchs à venir
