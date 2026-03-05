@@ -166,6 +166,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $stmt = $pdo->prepare("SELECT * FROM etudiants WHERE id_etudiant = :id");
         $stmt->execute([':id' => $user_id]);
         $user_data = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($user_data) {
+        $isLogged = true;
+        $userName = $user_data['prenom'] . ' ' . $user_data['nom'];
+        if (!empty($user_data['photo'])){
+
+         $userAvatar = '../uploads/photos_etudiants/' . $user_data['photo'];
+        } else {
+         $userAvatar = 'assets/images/default-avatar.png';
+        }
+    } else {
+        // Déconnecter si l'étudiant n'existe pas ou est inactif
+        session_unset();
+        session_destroy();
+        header("Location: login.php");
+        exit;
+    }
     }
 }
 
@@ -1100,7 +1116,7 @@ body {
                     <!-- Photo de profil -->
                     <div class="profile-photo-container">
                         <?php if ($is_etudiant && !empty($user_data['photo'])): ?>
-                            <img src="../<?= htmlspecialchars($user_data['photo']) ?>" 
+                            <img src="<?= $userAvatar ?>" 
                                  alt="Photo de profil" 
                                  class="profile-photo"
                                  id="profilePhoto">

@@ -1,6 +1,17 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
+// Initialisation des variables
+$isLogged = false;
+$isAdmin = false;
+$userName = '';
+$userAvatar = 'assets/images/default-avatar.png'; // avatar par défaut
+
+// Vérifier la connexion
+$isLogged = isset($_SESSION['etudiant_id']) || isset($_SESSION['admin_id']);
+$isAdmin = isset($_SESSION['admin_id']);
 
 // --- Traitement du formulaire de contact ---
 $message_sent = false;

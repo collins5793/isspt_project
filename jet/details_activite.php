@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once "../includes/db.php";
+define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+$base_url = BASE_URL;
 
 $isLogged = false;
 $isAdmin = false;
@@ -870,7 +872,7 @@ $commentaires->execute([$id]);
                         <i class="fas fa-bolt"></i> Actions rapides
                     </h3>
                     <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <a href="liste_activites.php" class="btn btn-secondary">
+                        <a href="index.php#activities" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Retour aux activités
                         </a>
                         <button class="btn btn-secondary" onclick="window.print()">

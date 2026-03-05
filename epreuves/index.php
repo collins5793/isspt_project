@@ -432,6 +432,7 @@ body {
     align-items: center;
     padding-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 10px;
 }
 
 .filiere-tag {
@@ -894,6 +895,9 @@ body {
                         </span>
                         <a href="#" class="btn-view open-modal">
                             <i class="fas fa-eye"></i> Voir détails
+                        </a>
+                        <a id="modal-download" class="btn-download" href="#" download>
+                            <i class="fas fa-download"></i> Télécharger le PDF
                         </a>
                     </div>
                 </div>

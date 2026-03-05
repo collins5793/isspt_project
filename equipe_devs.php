@@ -17,10 +17,10 @@ $isAdmin = isset($_SESSION['admin_id']);
 $team_members = [
     [
         'id' => 1,
-        'name' => 'John Doe',
+        'name' => 'Collins TOSSOU',
         'role' => 'Développeur Full-Stack',
         'description' => 'Spécialiste en PHP, MySQL et architectures complexes. Passionné par la création d\'expériences utilisateur exceptionnelles.',
-        'photo' => 'team/john.jpg',
+        'photo' => 'assets/images/team/collins.jpg',
         'skills' => ['PHP', 'MySQL', 'JavaScript', 'API', 'Architecture'],
         'social' => [
             'github' => 'https://github.com/johndoe',
@@ -32,10 +32,10 @@ $team_members = [
     ],
     [
         'id' => 2,
-        'name' => 'Jane Smith',
+        'name' => 'Amir MOUSSA',
         'role' => 'Développeuse Front-End',
         'description' => 'Experte en interfaces utilisateur modernes et animations CSS. Transforme des designs en expériences interactives fluides.',
-        'photo' => 'team/jane.jpg',
+        'photo' => 'assets/images/team/amir.jpg',
         'skills' => ['HTML/CSS', 'JavaScript', 'React', 'UI/UX', 'Animations'],
         'social' => [
             'github' => 'https://github.com/janesmith',
@@ -47,10 +47,10 @@ $team_members = [
     ],
     [
         'id' => 3,
-        'name' => 'Robert Johnson',
+        'name' => 'Mohamed TIDJANI',
         'role' => 'Développeur Back-End & DevOps',
         'description' => 'Expert en sécurité, performances et déploiement. Garantit la stabilité et la sécurité de la plateforme.',
-        'photo' => 'team/robert.jpg',
+        'photo' => 'assets/images/team/mohamed.jpg',
         'skills' => ['Security', 'DevOps', 'Python', 'Docker', 'Performance'],
         'social' => [
             'github' => 'https://github.com/robertjohnson',
@@ -62,30 +62,11 @@ $team_members = [
     ]
 ];
 
-// Superviseurs (optionnel)
-$supervisors = [
-    [
-        'id' => 1,
-        'name' => 'Dr. Marie Dupont',
-        'role' => 'Superviseur Académique',
-        'description' => 'Directrice du Département Informatique, responsable de la supervision technique et académique du projet.',
-        'photo' => 'team/supervisor1.jpg',
-        'department' => 'Département Informatique'
-    ],
-    [
-        'id' => 2,
-        'name' => 'Prof. Jean Martin',
-        'role' => 'Coordinateur Projet',
-        'description' => 'Coordinateur des projets étudiants, garant de la qualité et de la conformité avec les objectifs académiques.',
-        'photo' => 'team/supervisor2.jpg',
-        'department' => 'Bureau des Projets'
-    ]
-];
 
 // Statistiques du projet
 $project_stats = [
-    ['value' => '6', 'label' => 'Mois de développement', 'icon' => 'calendar-alt'],
-    ['value' => '15K+', 'label' => 'Lignes de code', 'icon' => 'code'],
+    ['value' => '5', 'label' => 'Mois de développement', 'icon' => 'calendar-alt'],
+    ['value' => '35K+', 'label' => 'Lignes de code', 'icon' => 'code'],
     ['value' => '2', 'label' => 'Modules principaux', 'icon' => 'cubes'],
     ['value' => '24/7', 'label' => 'Support technique', 'icon' => 'server']
 ];
@@ -101,7 +82,7 @@ $project_stats = [
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
     /* ==========================================================================
-       PAGE ÉQUIPE DE DÉVELOPPEMENT PREMIUM - ISS-PT
+       PAGE ÉQUIPE DE DÉVELOPPEMENT PREMIUM - ISSPT
        Design élégant avec animations fluides
        ========================================================================== */
     
@@ -418,7 +399,7 @@ $project_stats = [
     /* Badge de rôle */
     .role-badge {
         position: absolute;
-        top: 1.5rem;
+        top: 18.5rem;
         right: 1.5rem;
         background: linear-gradient(135deg, var(--accent-red), #c53030);
         color: white;
@@ -435,9 +416,12 @@ $project_stats = [
     /* Photo de profil */
     .team-photo {
         width: 100%;
-        height: 300px;
+        height: 400px;
         object-fit: cover;
         transition: var(--transition-smooth);
+        margin-bottom: 0;
+        padding-bottom: 0;
+        padding-top: 60px;
     }
     
     .team-card:hover .team-photo {
@@ -447,6 +431,8 @@ $project_stats = [
     /* Contenu de la carte */
     .team-content {
         padding: 2rem;
+        padding-top: 0;
+        margin-top: 0;
     }
     
     .team-name {
@@ -585,72 +571,7 @@ $project_stats = [
     .social-link.dribbble:hover { background: #ea4c89; }
     .social-link.gitlab:hover { background: #fc6d26; }
     
-    /* Section Superviseurs */
-    .supervisors-section {
-        margin-bottom: 4rem;
-    }
     
-    .supervisors-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-    }
-    
-    .supervisor-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(20px);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        padding: 2rem;
-        text-align: center;
-        transition: var(--transition-smooth);
-    }
-    
-    .supervisor-card:hover {
-        transform: translateY(-10px);
-        border-color: var(--accent-red);
-    }
-    
-    .supervisor-photo {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid var(--accent-teal);
-        margin: 0 auto 1.5rem;
-        transition: var(--transition-smooth);
-    }
-    
-    .supervisor-card:hover .supervisor-photo {
-        border-color: var(--accent-red);
-        transform: scale(1.05);
-    }
-    
-    .supervisor-name {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-white);
-        margin-bottom: 0.5rem;
-    }
-    
-    .supervisor-role {
-        color: var(--accent-red);
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 1rem;
-    }
-    
-    .supervisor-department {
-        color: var(--accent-gold);
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-        font-weight: 500;
-    }
-    
-    .supervisor-description {
-        color: var(--text-light);
-        line-height: 1.6;
-    }
     
     /* Timeline du projet */
     .timeline-section {
@@ -672,6 +593,13 @@ $project_stats = [
         height: 100%;
         background: linear-gradient(to bottom, var(--accent-teal), var(--accent-red));
     }
+    .contacting {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(to right, var(--accent-teal), var(--accent-red));
+    }
     
     .timeline-item {
         margin-bottom: 3rem;
@@ -686,7 +614,7 @@ $project_stats = [
     }
     
     .timeline-item:nth-child(even) {
-        left: 50%;
+        left: 55%;
         text-align: left;
         padding-left: 60px;
     }
@@ -884,7 +812,7 @@ $project_stats = [
                 L'Équipe de Développement
             </h1>
             <p class="hero-subtitle">
-                Rencontrez les passionnés qui ont construit la plateforme ISS-PT, 
+                Rencontrez les passionnés qui ont construit la plateforme ISSPT, 
                 fusionnant innovation technologique et excellence académique
             </p>
             <div class="typewriter-container">
@@ -915,7 +843,7 @@ $project_stats = [
             <div class="section-header scroll-animate">
                 <h2 class="section-title">Les Développeurs</h2>
                 <p class="section-subtitle">
-                    Notre équipe de 3 développeurs talentueux qui ont donné vie à la vision ISS-PT
+                    Notre équipe de 3 développeurs talentueux qui ont donné vie à la vision.
                 </p>
             </div>
             
@@ -1004,41 +932,13 @@ $project_stats = [
             </div>
         </section>
         
-        <!-- Superviseurs -->
-        <section class="supervisors-section">
-            <div class="section-header scroll-animate">
-                <h2 class="section-title">Supervision & Encadrement</h2>
-                <p class="section-subtitle">
-                    Les experts qui ont guidé et supervisé le développement du projet
-                </p>
-            </div>
-            
-            <div class="supervisors-grid">
-                <?php foreach ($supervisors as $index => $supervisor): ?>
-                <div class="supervisor-card scroll-animate" style="animation-delay: <?= $index * 0.2 ?>s">
-                    <img src="<?= $supervisor['photo'] ?>" 
-                         alt="<?= $supervisor['name'] ?>" 
-                         class="supervisor-photo"
-                         onerror="this.src='https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=<?= $index + 1 ?>'">
-                    
-                    <h3 class="supervisor-name"><?= $supervisor['name'] ?></h3>
-                    <p class="supervisor-role"><?= $supervisor['role'] ?></p>
-                    <p class="supervisor-department">
-                        <i class="fas fa-university"></i> 
-                        <?= $supervisor['department'] ?>
-                    </p>
-                    <p class="supervisor-description"><?= $supervisor['description'] ?></p>
-                </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
         
         <!-- Timeline du projet -->
         <section class="timeline-section">
             <div class="section-header scroll-animate">
                 <h2 class="section-title">Timeline du Projet</h2>
                 <p class="section-subtitle">
-                    Le parcours de développement de la plateforme ISS-PT
+                    Le parcours de développement de la plateforme ISSPT
                 </p>
             </div>
             
@@ -1046,7 +946,7 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Janvier 2024</div>
+                        <div class="timeline-date">Novembre 2025</div>
                         <h3 class="timeline-title">Conception & Planification</h3>
                         <p class="timeline-description">
                             Analyse des besoins, définition des fonctionnalités et création des maquettes
@@ -1057,7 +957,7 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Février 2024</div>
+                        <div class="timeline-date">Décembre 2025</div>
                         <h3 class="timeline-title">Développement du Module Épreuves</h3>
                         <p class="timeline-description">
                             Création de la base de données et développement du système de gestion des épreuves
@@ -1068,7 +968,7 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Mars 2024</div>
+                        <div class="timeline-date">Décembre 2025 - Janvier 2026</div>
                         <h3 class="timeline-title">Développement du Module JET</h3>
                         <p class="timeline-description">
                             Implémentation du système d'inscription aux activités et de billetterie
@@ -1079,7 +979,7 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Avril 2024</div>
+                        <div class="timeline-date">Février 2026</div>
                         <h3 class="timeline-title">Design & Animations</h3>
                         <p class="timeline-description">
                             Intégration du design premium et création des animations avancées
@@ -1090,7 +990,7 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Mai 2024</div>
+                        <div class="timeline-date">Mars 2026</div>
                         <h3 class="timeline-title">Tests & Optimisations</h3>
                         <p class="timeline-description">
                             Tests intensifs, corrections de bugs et optimisation des performances
@@ -1101,7 +1001,7 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Juin 2024</div>
+                        <div class="timeline-date">Avril 2026</div>
                         <h3 class="timeline-title">Lancement Officiel</h3>
                         <p class="timeline-description">
                             Déploiement en production et lancement officiel de la plateforme
@@ -1118,10 +1018,7 @@ $project_stats = [
                 Nous sommes toujours disponibles pour discuter de notre travail, 
                 partager notre expérience ou répondre à vos questions sur le développement.
             </p>
-            <a href="contact.php" class="btn">
-                <i class="fas fa-envelope"></i> 
-                Nous Contacter
-            </a>
+            <P class="contacting">Contacter l'un de nous via nos Réseaux Sociaux ou Contact</P>
         </section>
     </div>
     

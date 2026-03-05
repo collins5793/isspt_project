@@ -10,7 +10,12 @@ if (isset($_SESSION['etudiant_id'])) {
     if ($etudiant) {
         $isLogged = true;
         $userName = $etudiant['prenom'] . ' ' . $etudiant['nom'];
-        if (!empty($etudiant['photo'])) $userAvatar = '../uploads/etudiants/' . $etudiant['photo'];
+        if (!empty($etudiant['photo'])){
+
+         $userAvatar = '/uploads/photos_etudiants/' . $etudiant['photo'];
+        } else {
+         $userAvatar = 'assets/images/default-avatar.png';
+        }
     } else {
         // Déconnecter si l'étudiant n'existe pas ou est inactif
         session_unset();
@@ -37,7 +42,42 @@ if (isset($_SESSION['admin_id'])) {
     }
 }
 ?>
+<!-- <!DOCTYPE html>
+<html lang="fr">
+<head>
 
+    <!-- Encodage -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Compatibilité navigateur -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Titre du site -->
+    <title>Mon Site Web</title>
+
+    <!-- Description SEO -->
+    <meta name="description" content="Description de votre site web ici">
+
+    <!-- Auteur -->
+    <meta name="author" content="Collins Tossou">
+
+    <!-- Mots clés (facultatif aujourd'hui mais certains le mettent encore) -->
+    <meta name="keywords" content="site web, application, technologie">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+    <!-- CSS principal -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <!-- Google Fonts (optionnel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+</head> -->
 <style>
     /* ===== VARIABLES CSS ===== */
 :root {
@@ -559,8 +599,8 @@ if (isset($_SESSION['admin_id'])) {
 
   <!-- Logo + Nom université -->
   <div class="header-left">
-    <a href="index.php" class="header-logo">
-      <img src="../assets/images/logo.png" alt="Logo Université">
+    <a href="<?= $base_url ?>index.php" class="header-logo">
+      <img src="<?= $base_url ?>assets/images/logo.png" alt="Logo Université">
       <div class="header-title">
         <h1>Université Superieur Saint Paul Tarse</h1>
         <span>Portail Étudiant</span>
@@ -572,7 +612,7 @@ if (isset($_SESSION['admin_id'])) {
   <nav class="header-nav">
       <ul>
         <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
-        <li><a href=  "<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
+        <li><a href="<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
         <li><a href="<?= $base_url ?>epreuves/index.php">Épreuves</a></li>
         <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
         <li><a href="<?= $base_url ?>equipe_devs.php">Équipe de Développement</a></li>
@@ -590,25 +630,25 @@ if (isset($_SESSION['admin_id'])) {
 
     <!-- Si l'utilisateur n'est pas connecté -->
     <?php if (!$isLogged): ?>
-      <a href="etudiant/login_etudiant.php" class="header-login-btn">
+      <a href="<?= $base_url ?>etudiant/login_etudiant.php" class="header-login-btn">
         <i class="fas fa-user"></i> Connexion
       </a>
     <?php else: ?>
       <!-- Si l'utilisateur est connecté -->
       <div class="header-user">
         <span class="user-avatar">
-          <img src="<?= $userAvatar ?>" alt="Avatar" />
+          <img src="<?= $base_url ?><?= $userAvatar ?>" alt="Avatar" />
         </span>
         <span class="user-name"><?= htmlspecialchars($userName) ?></span>
         <i class="fas fa-chevron-down"></i>
 
         <!-- Menu déroulant -->
         <ul class="user-dropdown">
-          <li><a href="profil.php"><i class="fas fa-id-badge"></i> Mon profil</a></li>
+          <li><a href="../profil.php"><i class="fas fa-id-badge"></i> Mon profil</a></li>
           <?php if ($isAdmin): ?>
             <li><a href="<?= $base_url ?>admins/dashboard.php"><i class="fas fa-cog"></i> Espace admin</a></li>
           <?php endif; ?>
-          <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+          <li><a href="<?= $base_url ?>logout.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
         </ul>
       </div>
     <?php endif; ?>
