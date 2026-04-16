@@ -42,7 +42,42 @@ if (isset($_SESSION['admin_id'])) {
     }
 }
 ?>
+<!-- <!DOCTYPE html>
+<html lang="fr">
+<head>
 
+    <!-- Encodage -->
+    <meta charset="UTF-8">
+
+    <!-- Responsive mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Compatibilité navigateur -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Titre du site -->
+    <title>Mon Site Web</title>
+
+    <!-- Description SEO -->
+    <meta name="description" content="Description de votre site web ici">
+
+    <!-- Auteur -->
+    <meta name="author" content="Collins Tossou">
+
+    <!-- Mots clés (facultatif aujourd'hui mais certains le mettent encore) -->
+    <meta name="keywords" content="site web, application, technologie">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+    <!-- CSS principal -->
+    <link rel="stylesheet" href="/assets/css/style.css">
+
+    <!-- Google Fonts (optionnel) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+</head> -->
 <style>
     /* ===== VARIABLES CSS ===== */
 :root {
