@@ -115,7 +115,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
 ?>
 
 
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ISSPT - Portail Universitaire</title>
@@ -886,8 +885,6 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
         transform: translateY(0);
     }
     </style>
-</head>
-<body>
 
     <!-- Popup CGU (visible seulement si non accepté) -->
     <?php if (!$accepte_cgu): ?>
@@ -1102,6 +1099,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
                 localStorage.setItem('cgu_accepted', 'true');
                 document.cookie = 'cgu_accepted=true; path=/; max-age=31536000';
                 toggleContent();
+                window.location.reload();
             }
         });
     }
@@ -1226,5 +1224,3 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accept_terms'])) {
         });
     });
     </script>
-</body>
-</html>

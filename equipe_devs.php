@@ -1,86 +1,36 @@
 <?php
 session_start();
 require_once 'includes/db.php';
-define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+
+define('BASE_URL', '/isspt_projet/'); // Chemin relatif depuis localhost
 $base_url = BASE_URL;
-// Initialisation des variables
+
+// Initialisation des variables de session et connexion
 $isLogged = false;
 $isAdmin = false;
 $userName = '';
-$userAvatar = 'assets/images/default-avatar.png'; // avatar par défaut
+$userAvatar = 'assets/images/default-avatar.png'; // Avatar par défaut
 
-// Vérifier la connexion
+// Vérifier l'état de la connexion
 $isLogged = isset($_SESSION['etudiant_id']) || isset($_SESSION['admin_id']);
 $isAdmin = isset($_SESSION['admin_id']);
 
-// Données de l'équipe
-$team_members = [
-    [
-        'id' => 1,
-        'name' => 'Collins TOSSOU',
-        'role' => 'Développeur Full-Stack',
-        'description' => 'Spécialiste en PHP, MySQL et architectures complexes. Passionné par la création d\'expériences utilisateur exceptionnelles.',
-        'photo' => 'assets/images/team/collins.jpg',
-        'skills' => ['PHP', 'MySQL', 'JavaScript', 'API', 'Architecture'],
-        'social' => [
-            'github' => 'https://github.com/johndoe',
-            'linkedin' => 'https://linkedin.com/in/johndoe',
-            'twitter' => 'https://twitter.com/johndoe'
-        ],
-        'contributions' => ['Module Épreuves', 'Base de données', 'API REST'],
-        'fun_fact' => 'Aime le café fort et les nuits blanches de code'
-    ],
-    [
-        'id' => 2,
-        'name' => 'Amir MOUSSA',
-        'role' => 'Développeuse Front-End',
-        'description' => 'Experte en interfaces utilisateur modernes et animations CSS. Transforme des designs en expériences interactives fluides.',
-        'photo' => 'assets/images/team/amir.jpg',
-        'skills' => ['HTML/CSS', 'JavaScript', 'React', 'UI/UX', 'Animations'],
-        'social' => [
-            'github' => 'https://github.com/janesmith',
-            'linkedin' => 'https://linkedin.com/in/janesmith',
-            'dribbble' => 'https://dribbble.com/janesmith'
-        ],
-        'contributions' => ['Design UI/UX', 'Animations', 'Module JET'],
-        'fun_fact' => 'Collectionne les stickers de café et les figurines de chat'
-    ],
-    [
-        'id' => 3,
-        'name' => 'Mohamed TIDJANI',
-        'role' => 'Développeur Back-End & DevOps',
-        'description' => 'Expert en sécurité, performances et déploiement. Garantit la stabilité et la sécurité de la plateforme.',
-        'photo' => 'assets/images/team/mohamed.jpg',
-        'skills' => ['Security', 'DevOps', 'Python', 'Docker', 'Performance'],
-        'social' => [
-            'github' => 'https://github.com/robertjohnson',
-            'linkedin' => 'https://linkedin.com/in/robertjohnson',
-            'gitlab' => 'https://gitlab.com/robertjohnson'
-        ],
-        'contributions' => ['Sécurité', 'Déploiement', 'Optimisation'],
-        'fun_fact' => 'Fan de musique électronique pendant les sessions de code'
-    ]
-];
-
-
-// Statistiques du projet
+// Statistiques générales du projet de la promotion SIL
 $project_stats = [
-    ['value' => '5', 'label' => 'Mois de développement', 'icon' => 'calendar-alt'],
-    ['value' => '35K+', 'label' => 'Lignes de code', 'icon' => 'code'],
-    ['value' => '2', 'label' => 'Modules principaux', 'icon' => 'cubes'],
-    ['value' => '24/7', 'label' => 'Support technique', 'icon' => 'server']
+    ['value' => '6', 'label' => 'Mois de développement', 'icon' => 'calendar-alt'],
+    ['value' => '56K+', 'label' => 'Lignes de code cumulées', 'icon' => 'code'],
+    ['value' => '2', 'label' => 'Modules principaux intégrés', 'icon' => 'cubes'],
+    ['value' => '24/7', 'label' => 'Disponibilité plateforme', 'icon' => 'server']
 ];
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>👨‍💻 Équipe de Développement - Institut Supérieur Saint Paul Tarse</title>
+    <!-- Font Awesome & Google Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
+        <style>
     /* ==========================================================================
        PAGE ÉQUIPE DE DÉVELOPPEMENT PREMIUM - ISSPT
        Design élégant avec animations fluides
@@ -800,8 +750,8 @@ $project_stats = [
         pointer-events: none;
     }
     </style>
-</head>
-<body>
+
+
     <?php include "includes/header.php"; ?>
     
     <!-- Hero Section -->
@@ -812,25 +762,25 @@ $project_stats = [
                 L'Équipe de Développement
             </h1>
             <p class="hero-subtitle">
-                Rencontrez les passionnés qui ont construit la plateforme ISSPT, 
-                fusionnant innovation technologique et excellence académique
+                Découvrez la promotion qui a conçu et réalisé la plateforme de l'ISSPT, 
+                alliant rigueur technique et esprit d'innovation.
             </p>
             <div class="typewriter-container">
-                <span class="typewriter-text">Building the future of education...</span>
+                <span class="typewriter-text">Conception d'outils modernes pour l'éducation...</span>
             </div>
         </div>
     </section>
     
-    <!-- Statistiques -->
+    <!-- Statistiques du Projet -->
     <div class="stats-section scroll-animate">
         <div class="stats-grid">
             <?php foreach ($project_stats as $stat): ?>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-<?= $stat['icon'] ?>"></i>
+                    <i class="fas fa-<?= htmlspecialchars($stat['icon']) ?>"></i>
                 </div>
-                <div class="stat-value"><?= $stat['value'] ?></div>
-                <div class="stat-label"><?= $stat['label'] ?></div>
+                <div class="stat-value"><?= htmlspecialchars($stat['value']) ?></div>
+                <div class="stat-label"><?= htmlspecialchars($stat['label']) ?></div>
             </div>
             <?php endforeach; ?>
         </div>
@@ -838,107 +788,29 @@ $project_stats = [
     
     <!-- Main Content -->
     <div class="team-container">
-        <!-- Développeurs -->
+        
+        <!-- Présentation de la Promotion -->
         <section class="developers-section">
             <div class="section-header scroll-animate">
-                <h2 class="section-title">Les Développeurs</h2>
-                <p class="section-subtitle">
-                    Notre équipe de 3 développeurs talentueux qui ont donné vie à la vision.
-                </p>
-            </div>
-            
-            <div class="team-grid">
-                <?php foreach ($team_members as $index => $member): ?>
-                <div class="team-card scroll-animate" style="animation-delay: <?= $index * 0.2 ?>s">
-                    <div class="role-badge">
-                        <?= $member['role'] ?>
-                    </div>
-                    
-                    <img src="<?= $member['photo'] ?>" 
-                         alt="<?= $member['name'] ?>" 
-                         class="team-photo"
-                         onerror="this.src='https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=<?= $index + 1 ?>'">
-                    
-                    <div class="team-content">
-                        <h3 class="team-name"><?= $member['name'] ?></h3>
-                        <p class="team-role">
-                            <i class="fas fa-star"></i> 
-                            <?= $member['role'] ?>
-                        </p>
-                        
-                        <p class="team-description"><?= $member['description'] ?></p>
-                        
-                        <!-- Compétences -->
-                        <div class="skills-container">
-                            <div class="skills-title">Compétences</div>
-                            <div class="skills-list">
-                                <?php foreach ($member['skills'] as $skill): ?>
-                                <span class="skill-tag"><?= $skill ?></span>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        
-                        <!-- Contributions -->
-                        <div class="skills-container">
-                            <div class="skills-title">Contributions principales</div>
-                            <ul class="contributions-list">
-                                <?php foreach ($member['contributions'] as $contribution): ?>
-                                <li><?= $contribution ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                        
-                        <!-- Fun Fact -->
-                        <div class="fun-fact">
-                            <div class="fun-fact-title">Fun Fact</div>
-                            <p class="fun-fact-text"><?= $member['fun_fact'] ?></p>
-                        </div>
-                        
-                        <!-- Réseaux sociaux -->
-                        <div class="social-links">
-                            <?php if (isset($member['social']['github'])): ?>
-                            <a href="<?= $member['social']['github'] ?>" class="social-link github" target="_blank">
-                                <i class="fab fa-github"></i>
-                            </a>
-                            <?php endif; ?>
-                            
-                            <?php if (isset($member['social']['linkedin'])): ?>
-                            <a href="<?= $member['social']['linkedin'] ?>" class="social-link linkedin" target="_blank">
-                                <i class="fab fa-linkedin-in"></i>
-                            </a>
-                            <?php endif; ?>
-                            
-                            <?php if (isset($member['social']['twitter'])): ?>
-                            <a href="<?= $member['social']['twitter'] ?>" class="social-link twitter" target="_blank">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <?php endif; ?>
-                            
-                            <?php if (isset($member['social']['dribbble'])): ?>
-                            <a href="<?= $member['social']['dribbble'] ?>" class="social-link dribbble" target="_blank">
-                                <i class="fab fa-dribbble"></i>
-                            </a>
-                            <?php endif; ?>
-                            
-                            <?php if (isset($member['social']['gitlab'])): ?>
-                            <a href="<?= $member['social']['gitlab'] ?>" class="social-link gitlab" target="_blank">
-                                <i class="fab fa-gitlab"></i>
-                            </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+                <h2 class="section-title">Les Concepteurs</h2>
+                <div class="promo-presentation-card">
+                    <h3>Étudiants en Système Informatique et Logiciel (SIL)</h3>
+                    <h4>Institut Supérieur Saint Paul Tarse</h4>
+                    <p class="section-subtitle">
+                        Cette plateforme est l'œuvre collective des étudiants de la filière Système Informatique et Logiciel. 
+                        À travers ce projet d'envergure, la promotion a mis en synergie ses compétences en ingénierie logicielle, 
+                        gestion de bases de données et conception d'interfaces pour offrir un outil adapté aux besoins de notre communauté académique.
+                    </p>
                 </div>
-                <?php endforeach; ?>
             </div>
         </section>
-        
         
         <!-- Timeline du projet -->
         <section class="timeline-section">
             <div class="section-header scroll-animate">
                 <h2 class="section-title">Timeline du Projet</h2>
                 <p class="section-subtitle">
-                    Le parcours de développement de la plateforme ISSPT
+                    Le parcours de développement de la plateforme ISSPT par la promotion.
                 </p>
             </div>
             
@@ -946,10 +818,10 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Novembre 2025</div>
+                        <div class="timeline-date">Novembre - Décembre 2025</div>
                         <h3 class="timeline-title">Conception & Planification</h3>
                         <p class="timeline-description">
-                            Analyse des besoins, définition des fonctionnalités et création des maquettes
+                            Analyse globale des besoins de l'institut, rédaction du cahier des charges et modélisation de l'architecture.
                         </p>
                     </div>
                 </div>
@@ -957,10 +829,10 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Décembre 2025</div>
+                        <div class="timeline-date">Janvier 2026</div>
                         <h3 class="timeline-title">Développement du Module Épreuves</h3>
                         <p class="timeline-description">
-                            Création de la base de données et développement du système de gestion des épreuves
+                            Mise en place de la base de données relationnelle et implémentation du système de gestion des épreuves.
                         </p>
                     </div>
                 </div>
@@ -968,10 +840,10 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Décembre 2025 - Janvier 2026</div>
+                        <div class="timeline-date">Février 2026 - Avril 2026</div>
                         <h3 class="timeline-title">Développement du Module JET</h3>
                         <p class="timeline-description">
-                            Implémentation du système d'inscription aux activités et de billetterie
+                            Spécification et implémentation complète du système d'inscription aux activités et de suivi.
                         </p>
                     </div>
                 </div>
@@ -979,10 +851,10 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Février 2026</div>
-                        <h3 class="timeline-title">Design & Animations</h3>
+                        <div class="timeline-date">Mai 2026</div>
+                        <h3 class="timeline-title">Intégration d'Interface & Ergonomie</h3>
                         <p class="timeline-description">
-                            Intégration du design premium et création des animations avancées
+                            Travail sur l'expérience utilisateur (UI/UX) pour garantir une navigation fluide, moderne et accessible.
                         </p>
                     </div>
                 </div>
@@ -990,10 +862,10 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Mars 2026</div>
+                        <div class="timeline-date">Mai 2026</div>
                         <h3 class="timeline-title">Tests & Optimisations</h3>
                         <p class="timeline-description">
-                            Tests intensifs, corrections de bugs et optimisation des performances
+                            Campagne de tests unitaires, audits de sécurité, correction des bugs et optimisation des requêtes de la base de données.
                         </p>
                     </div>
                 </div>
@@ -1001,10 +873,10 @@ $project_stats = [
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">Avril 2026</div>
+                        <div class="timeline-date">Juin 2026</div>
                         <h3 class="timeline-title">Lancement Officiel</h3>
                         <p class="timeline-description">
-                            Déploiement en production et lancement officiel de la plateforme
+                            Déploiement final sur les serveurs de l'établissement et ouverture officielle des accès de la plateforme.
                         </p>
                     </div>
                 </div>
@@ -1013,87 +885,66 @@ $project_stats = [
         
         <!-- CTA Section -->
         <section class="cta-section scroll-animate">
-            <h2 class="cta-title">Une Question Pour Notre Équipe ?</h2>
+            <h2 class="cta-title">Une question ou une suggestion concernant notre travail ?</h2>
             <p class="cta-description">
-                Nous sommes toujours disponibles pour discuter de notre travail, 
-                partager notre expérience ou répondre à vos questions sur le développement.
+                L'équipe reste à l'écoute de la communauté pour toute suggestion d'amélioration, 
+                remontée de bug ou échange technique autour du projet.
             </p>
-            <P class="contacting">Contacter l'un de nous via nos Réseaux Sociaux ou Contact</P>
+            <p class="contacting">N'hésitez pas à vous rapprocher des délégués de la promotion ou de l'administration de l'ISSPT.</p>
         </section>
     </div>
     
     <?php include "includes/footer.php"; ?>
     
+    <!-- Scripts d'animation & Compteurs -->
     <script>
-    // Animation au scroll
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Observer pour les animations au scroll
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '50px'
+        });
+        
+        document.querySelectorAll('.scroll-animate').forEach((el) => {
+            observer.observe(el);
+        });
+        
+        // Animation dynamique des compteurs de statistiques
+        document.querySelectorAll('.stat-value').forEach((stat) => {
+            const originalText = stat.textContent;
+            const numericPart = originalText.replace(/[^0-9]/g, '');
+            
+            if (numericPart) {
+                const target = parseInt(numericPart);
+                let current = 0;
+                const increment = target / 20;
+                
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        clearInterval(timer);
+                        stat.textContent = originalText;
+                    } else {
+                        stat.textContent = Math.floor(current) + (originalText.includes('+') ? '+' : '');
+                    }
+                }, 50);
             }
         });
-    }, {
-        threshold: 0.1,
-        rootMargin: '50px'
-    });
-    
-    document.querySelectorAll('.scroll-animate').forEach((el) => {
-        observer.observe(el);
-    });
-    
-    // Effet ripple sur les cartes
-    document.querySelectorAll('.team-card, .supervisor-card, .stat-card').forEach((card) => {
-        card.addEventListener('click', function(e) {
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            const ripple = document.createElement('span');
-            ripple.classList.add('ripple');
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-    });
-    
-    // Animation des compétences au hover
-    document.querySelectorAll('.skill-tag').forEach((tag) => {
-        tag.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px) scale(1.1)';
-        });
-        
-        tag.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-        });
-    });
-    
-    // Animation de flottement pour les icônes de stats
-    document.querySelectorAll('.stat-icon').forEach((icon, index) => {
-        icon.style.animationDelay = `${index * 0.5}s`;
-    });
-    
-    // Animation de typewriter
-    const typewriterText = document.querySelector('.typewriter-text');
-    if (typewriterText) {
-        setTimeout(() => {
-            typewriterText.style.animation = 'none';
-            setTimeout(() => {
-                typewriterText.style.animation = 'typewriter 3s steps(30, end), blink 0.75s step-end infinite';
-            }, 10);
-        }, 4000);
-        
-        // Changer le texte après la première animation
-        setTimeout(() => {
+
+        // Animation Typewriter séquentielle
+        const typewriterText = document.querySelector('.typewriter-text');
+        if (typewriterText) {
             const texts = [
-                "Building the future of education...",
-                "Code. Design. Innovate.",
-                "Three developers. One vision.",
-                "Excellence in every line of code."
+                "Conception d'outils modernes pour l'éducation...",
+                "Code. Design. Innovation.",
+                "Une promotion engagée, une vision collective.",
+                "L'excellence au cœur de chaque ligne de code."
             ];
             let currentIndex = 0;
             
@@ -1106,137 +957,6 @@ $project_stats = [
                     typewriterText.style.animation = 'typewriter 3s steps(30, end), blink 0.75s step-end infinite';
                 }, 10);
             }, 7000);
-        }, 3000);
-    }
-    
-    // Animation de chargement de la page
-    window.addEventListener('load', function() {
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity 0.5s ease-in';
-        
-        setTimeout(() => {
-            document.body.style.opacity = '1';
-        }, 100);
-        
-        // Animation des cartes en séquence
-        const teamCards = document.querySelectorAll('.team-card');
-        teamCards.forEach((card, index) => {
-            setTimeout(() => {
-                card.style.transform = 'translateY(20px)';
-                card.style.opacity = '0';
-                card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                
-                setTimeout(() => {
-                    card.style.transform = 'translateY(0)';
-                    card.style.opacity = '1';
-                }, 50);
-            }, 300 + (index * 200));
-        });
-        
-        // Animation des statistiques (compteur)
-        document.querySelectorAll('.stat-value').forEach((stat) => {
-            const originalText = stat.textContent;
-            if (originalText.includes('+') || originalText.includes('/')) {
-                // Animer les chiffres
-                const numericPart = originalText.replace(/[^0-9]/g, '');
-                if (numericPart) {
-                    const target = parseInt(numericPart);
-                    let current = 0;
-                    const increment = target / 20;
-                    
-                    const timer = setInterval(() => {
-                        current += increment;
-                        if (current >= target) {
-                            clearInterval(timer);
-                            stat.textContent = originalText;
-                        } else {
-                            stat.textContent = Math.floor(current) + (originalText.includes('+') ? '+' : '');
-                        }
-                    }, 50);
-                }
-            }
-        });
-    });
-    
-    // Effet parallaxe sur les photos
-    window.addEventListener('scroll', function() {
-        const scrolled = window.pageYOffset;
-        const rate = scrolled * -0.5;
-        
-        document.querySelectorAll('.team-photo').forEach((photo) => {
-            photo.style.transform = `translateY(${rate * 0.2}px) scale(1.05)`;
-        });
-    });
-    
-    // Tooltip pour les compétences
-    document.querySelectorAll('.skill-tag').forEach((tag) => {
-        tag.addEventListener('mouseenter', function() {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'skill-tooltip';
-            tooltip.textContent = this.textContent;
-            tooltip.style.cssText = `
-                position: absolute;
-                background: var(--accent-teal);
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                font-size: 0.8rem;
-                z-index: 1000;
-                transform: translateY(-40px);
-                white-space: nowrap;
-                pointer-events: none;
-            `;
-            
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = `${rect.left + rect.width / 2}px`;
-            tooltip.style.top = `${rect.top}px`;
-            
-            document.body.appendChild(tooltip);
-            
-            this.tooltip = tooltip;
-        });
-        
-        tag.addEventListener('mouseleave', function() {
-            if (this.tooltip) {
-                this.tooltip.remove();
-            }
-        });
-    });
-    
-    // Gestion des erreurs d'images
-    document.querySelectorAll('img').forEach((img) => {
-        img.addEventListener('error', function() {
-            if (this.classList.contains('team-photo')) {
-                this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.alt)}&background=BA281E&color=fff&size=500`;
-            } else if (this.classList.contains('supervisor-photo')) {
-                this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(this.alt)}&background=20c997&color=fff&size=500`;
-            }
-        });
+        }
     });
     </script>
-    
-    <style>
-    /* Styles supplémentaires pour les tooltips */
-    .skill-tooltip::after {
-        content: '';
-        position: absolute;
-        bottom: -5px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-top: 5px solid var(--accent-teal);
-    }
-    
-    /* Animation pour le parallaxe */
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            animation: none !important;
-            transition: none !important;
-        }
-    }
-    </style>
-</body>
-</html>

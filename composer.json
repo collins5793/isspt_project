@@ -1,5 +1,8 @@
 {
     "require": {
-        "spatie/pdf-to-image": "^1.2"
+        "spatie/pdf-to-image": "^1.2",
+        "endroid/qr-code": "^6.0",
+        "ext-gd": "*",
+        "setasign/fpdf": "^1.8"
     }
 }

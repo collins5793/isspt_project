@@ -1,18 +1,22 @@
 <?php
 // evenement.php
-
-session_start(); // ⚠️ très important pour $_SESSION
-require_once '../includes/db.php'; // connexion PDO
-define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
+session_start();
+require_once __DIR__ . '/../vendor/autoload.php';
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
+require_once '../includes/db.php'; // Connexion PDO à isspt_project
+define('BASE_URL', '/isspt_projet/');
 $base_url = BASE_URL;
 
 // ---------------------------
-// Vérification si l'utilisateur est connecté
+// 1. Vérification de la connexion de l'utilisateur
 // ---------------------------
 $isLogged = false;
 $isAdmin = false;
+$userId = null;
+$userType = null;
 $userName = '';
-$userAvatar = '../assets/images/default-avatar.png'; // avatar par défaut
+$userAvatar = '../assets/images/default-avatar.png';
 
 // Vérifier étudiant
 if (isset($_SESSION['etudiant_id'])) {
@@ -21,6 +25,8 @@ if (isset($_SESSION['etudiant_id'])) {
     $etudiant = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($etudiant) {
         $isLogged = true;
+        $userId = $_SESSION['etudiant_id'];
+        $userType = 'etudiant';
         $userName = $etudiant['prenom'] . ' ' . $etudiant['nom'];
         if (!empty($etudiant['photo'])) {
             $userAvatar = '../uploads/etudiants/' . $etudiant['photo'];
@@ -41,6 +47,8 @@ if (isset($_SESSION['admin_id'])) {
     if ($admin) {
         $isLogged = true;
         $isAdmin = true;
+        $userId = $_SESSION['admin_id'];
+        $userType = 'admin';
         $userName = $admin['prenom'] . ' ' . $admin['nom'];
     } else {
         session_unset();
@@ -51,16 +59,13 @@ if (isset($_SESSION['admin_id'])) {
 }
 
 // ---------------------------
-// Vérifier que l'id de l'événement est présent
+// 2. Récupération de l'Événement
 // ---------------------------
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     die('Événement introuvable.');
 }
 $eventId = (int)$_GET['id'];
 
-// ---------------------------
-// Récupérer l'événement
-// ---------------------------
 $stmt = $pdo->prepare("
     SELECT e.*, ay.label AS annee_scolaire, a.nom AS admin_nom, a.prenom AS admin_prenom
     FROM evenements e
@@ -73,70 +78,198 @@ $event = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$event) die('Événement introuvable.');
 
 // ---------------------------
-// Récupérer artistes
+// 3. Vérification si l'utilisateur possède déjà un ticket
+// ---------------------------
+$alreadyHasTicket = false;
+$userTicket = null;
+
+if ($isLogged) {
+    // Si connecté, on cherche par son id_user (etudiant ou admin)
+    $stmtTicket = $pdo->prepare("SELECT * FROM tickets WHERE event_id = ? AND user_id = ? LIMIT 1");
+    $stmtTicket->execute([$eventId, $userId]);
+    $userTicket = $stmtTicket->fetch(PDO::FETCH_ASSOC);
+    if ($userTicket) {
+        $alreadyHasTicket = true;
+    }
+}
+
+// ---------------------------
+// 4. Traitement AJAX/POST pour la réservation de Ticket
+// ---------------------------
+// ---------------------------
+// 4. Traitement AJAX/POST pour la réservation de Ticket
+// ---------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'book_ticket') {
+    // On démarre un tampon de sortie pour intercepter tout warning ou echo parasite de PHP
+    ob_start();
+    header('Content-Type: application/json; charset=utf-8');
+    
+    // CAS 1 : L'utilisateur est connecté (Étudiant ou Admin) -> Ticket Gratuit
+    if ($isLogged) {
+        try {
+            // Vérifier si l'étudiant a déjà un ticket pour cet événement
+            $stmtCheck = $pdo->prepare("SELECT id_ticket FROM tickets WHERE event_id = ? AND user_id = ?");
+            $stmtCheck->execute([$eventId, $userId]);
+            if ($stmtCheck->fetch()) {
+                ob_clean(); // On efface tout résidu textuel parasite avant d'écrire le JSON
+                echo json_encode(['success' => false, 'message' => 'Vous possédez déjà un ticket pour cet événement.']);
+                exit;
+            }
+
+            $ticketCode = 'TICK-' . strtoupper(uniqid());
+            $amount = 0.00; // Gratuit pour les étudiants
+
+            // Insertion dans la table tickets
+            $stmtIns = $pdo->prepare("
+                INSERT INTO tickets (event_id, template_id, layout_id, user_id, code_ticket, statut, amount)
+                VALUES (?, ?, ?, ?, ?, 'paye', ?)
+            ");
+            $stmtIns->execute([
+                $eventId,
+                $event['ticket_template_id'] ?: null,
+                $event['layout_id'] ?: null,
+                $userId,
+                $ticketCode,
+                $amount
+            ]);
+
+            // Récupérer l'ID du ticket qui vient d'être créé
+            $id_ticket_genere = $pdo->lastInsertId();
+
+            // Récupérer l'email de l'étudiant connecté pour l'envoi du ticket
+            $email_destinataire = '';
+            if ($userType === 'etudiant') {
+                $stmtMail = $pdo->prepare("SELECT email FROM etudiants WHERE id_etudiant = ?");
+                $stmtMail->execute([$userId]);
+                $email_destinataire = $stmtMail->fetchColumn();
+            }
+
+            // Exécution sécurisée du script de dessin graphique du ticket
+            if (file_exists('generate_ticket.php')) {
+                include 'generate_ticket.php';
+            } else {
+                throw new Exception("Le fichier 'generate_ticket.php' est introuvable sur le serveur.");
+            }
+
+            ob_clean(); // Nettoyage final du buffer de sortie
+            echo json_encode(['success' => true, 'message' => 'Ticket généré avec succès !']);
+            exit;
+
+        } catch (Exception $e) {
+            ob_clean(); // En cas de crash, on efface les sorties cassées pour envoyer uniquement le JSON d'erreur
+            echo json_encode(['success' => false, 'message' => 'Erreur lors de la génération du ticket : ' . $e->getMessage()]);
+            exit;
+        }
+    } else {
+        // CAS 2 : Personne non connectée (Externe avec Code de paiement)
+        $code = trim($_POST['payment_code'] ?? '');
+        $nom = trim($_POST['nom'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+
+        if (empty($code) || empty($nom) || empty($email)) {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Veuillez remplir tous les champs demandés.']);
+            exit;
+        }
+
+        // Vérification du code de paiement
+        $stmtCode = $pdo->prepare("SELECT * FROM codes_paiement WHERE code = ? AND evenement_id = ? AND statut = 'disponible' LIMIT 1");
+        $stmtCode->execute([$code, $eventId]);
+        $codeData = $stmtCode->fetch(PDO::FETCH_ASSOC);
+
+        if (!$codeData) {
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Code de paiement invalide, expiré ou déjà utilisé.']);
+            exit;
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Consommer le code de paiement et lui associer le nom de l'externe
+            $stmtUpdateCode = $pdo->prepare("UPDATE codes_paiement SET statut = 'utilise', date_utilisation = NOW(), nom_complet = ? WHERE id = ?");
+            $stmtUpdateCode->execute([$nom, $codeData['id']]);
+
+            // 2. Générer le code unique du ticket externe
+            $ticketCode = 'TICK-EXT-' . strtoupper(uniqid());
+            $amount = $codeData['montant_associe'];
+
+            // 3. Insérer dans la table tickets
+            $stmtInsTicket = $pdo->prepare("
+                INSERT INTO tickets (event_id, template_id, layout_id, external_participant_id, code_ticket, statut, amount)
+                VALUES (?, ?, ?, ?, ?, 'paye', ?)
+            ");
+            $stmtInsTicket->execute([
+                $eventId,
+                $event['ticket_template_id'] ?: null,
+                $event['layout_id'] ?: null,
+                $codeData['id'],
+                $ticketCode,
+                $amount
+            ]);
+
+            // Récupérer l'ID du ticket externe généré
+            $id_ticket_genere = $pdo->lastInsertId();
+            $email_destinataire = $email;
+
+            // Exécution sécurisée du script de dessin graphique du ticket
+            if (file_exists('generate_ticket.php')) {
+                include 'generate_ticket.php';
+            } else {
+                throw new Exception("Le fichier 'generate_ticket.php' est introuvable sur le serveur.");
+            }
+
+            $pdo->commit();
+            ob_clean();
+            echo json_encode(['success' => true, 'message' => 'Paiement validé ! Votre ticket a été généré et envoyé à ' . htmlspecialchars($email)]);
+            exit;
+
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            ob_clean();
+            echo json_encode(['success' => false, 'message' => 'Une erreur est survenue : ' . $e->getMessage()]);
+            exit;
+        }
+    }
+}
+
+// ---------------------------
+// 5. Récupération des données annexes (Artistes, Galerie, Commentaires)
 // ---------------------------
 $stmtArtistes = $pdo->prepare("SELECT * FROM evenement_artistes WHERE id_evenement = :id");
 $stmtArtistes->execute(['id' => $eventId]);
 $artistes = $stmtArtistes->fetchAll(PDO::FETCH_ASSOC);
 
-// ---------------------------
-// Récupérer galerie
-// ---------------------------
 $stmtGalerie = $pdo->prepare("SELECT * FROM galerie WHERE event_id = :id ORDER BY uploaded_at DESC");
 $stmtGalerie->execute(['id' => $eventId]);
 $medias = $stmtGalerie->fetchAll(PDO::FETCH_ASSOC);
 
-
-// ---------------------------
-// Ajouter un commentaire si formulaire soumis
-// ---------------------------
-// ---------------------------
-// Ajouter un commentaire si formulaire soumis
-// ---------------------------
+// Insertion commentaire
 if ($isLogged && isset($_POST['submit_comment'])) {
     $message = trim($_POST['message'] ?? '');
-
     if (!empty($message)) {
-        // Déterminer l'ID et le type de l'utilisateur connecté
-        $idEtudiant = null;
-        $idAdmin = null;
-        $userType = null;
+        $idEtudiant = ($userType === 'etudiant') ? $userId : null;
+        $idAdmin = ($userType === 'admin') ? $userId : null;
 
-        if (isset($_SESSION['etudiant_id'])) {
-            $idEtudiant = $_SESSION['etudiant_id'];
-            $userType = 'etudiant';
-        } elseif (isset($_SESSION['admin_id'])) {
-            $idAdmin = $_SESSION['admin_id'];
-            $userType = 'admin';
-        }
-
-        if ($userType) {
-            $stmt = $pdo->prepare("
-                INSERT INTO commentaires (event_id, id_etudiant, id_admin, user_type, message)
-                VALUES (:event_id, :id_etudiant, :id_admin, :user_type, :message)
-            ");
-
-            $stmt->execute([
-                'event_id'    => $eventId,
-                'id_etudiant' => $idEtudiant,
-                'id_admin'    => $idAdmin,
-                'user_type'   => $userType,
-                'message'     => $message
-            ]);
-
-            // Redirection pour éviter le double envoi
-            header("Location: evenement.php?id=$eventId");
-            exit;
-        }
-    } else {
-        $error = "Le commentaire ne peut pas être vide.";
+        $stmtInsC = $pdo->prepare("
+            INSERT INTO commentaires (event_id, id_etudiant, id_admin, user_type, message)
+            VALUES (:event_id, :id_etudiant, :id_admin, :user_type, :message)
+        ");
+        $stmtInsC->execute([
+            'event_id'    => $eventId,
+            'id_etudiant' => $idEtudiant,
+            'id_admin'    => $idAdmin,
+            'user_type'   => $userType,
+            'message'     => $message
+        ]);
+        header("Location: evenement.php?id=$eventId");
+        exit;
     }
 }
 
-
-// ===============================
-// CHARGEMENT DES COMMENTAIRES
-// ===============================
+// Chargement des commentaires
 $stmtComments = $pdo->prepare("
     SELECT c.*, 
            e.nom AS etudiant_nom, e.prenom AS etudiant_prenom,
@@ -151,92 +284,15 @@ $stmtComments = $pdo->prepare("
 ");
 $stmtComments->execute(['event_id' => $eventId]);
 $comments = $stmtComments->fetchAll(PDO::FETCH_ASSOC);
-
-
-
-
-
-// ---------------------------
-// Upload fichiers média
-// ---------------------------
-$uploadMessage = '';
-if($isLogged && isset($_POST['submit_upload']) && isset($_FILES['file'])) {
-    $event_id = (int)$_POST['event_id'];
-    $caption = trim($_POST['caption'] ?? '');
-    $file = $_FILES['file'];
-    $maxSize = 5 * 1024 * 1024;
-
-    if($file['error'] !== 0) {
-        $uploadMessage = "Erreur lors de l'upload.";
-    } elseif($file['size'] > $maxSize) {
-        $uploadMessage = "Fichier trop volumineux (max 5 Mo).";
-    } else {
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $allowedImages = ['jpg','jpeg','png','gif','webp'];
-        $allowedVideos = ['mp4','webm','mov'];
-
-        if(in_array($ext, $allowedImages)) $type = 'image';
-        elseif(in_array($ext, $allowedVideos)) $type = 'video';
-        else $type = null;
-
-        if($type) {
-            $newName = uniqid('media_') . '.' . $ext;
-            $uploadDir = __DIR__ . '/uploads/evenements/';
-            if(!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            $dest = $uploadDir . $newName;
-
-            if(move_uploaded_file($file['tmp_name'], $dest)) {
-                $stmt = $pdo->prepare("
-                    INSERT INTO galerie (event_id, file_path, file_type, caption) 
-                    VALUES (:event_id, :file_path, :file_type, :caption)
-                ");
-                $stmt->execute([
-                    'event_id' => $event_id,
-                    'file_path' => 'uploads/evenements/' . $newName,
-                    'file_type' => $type,
-                    'caption' => $caption
-                ]);
-                header("Location: evenement.php?id=$event_id");
-                exit;
-            } else $uploadMessage = "Erreur lors du déplacement du fichier.";
-        } else $uploadMessage = "Type de fichier non autorisé.";
-    }
-}
-
-// ---------------------------
-// Ajouter commentaire
-// ---------------------------
-if($isLogged && isset($_POST['submit_comment']) && isset($_SESSION['etudiant_id'])) {
-    $event_id = (int)$_POST['event_id'];
-    $etudiant_id = (int)$_SESSION['etudiant_id'];
-    $message = trim($_POST['message']);
-    if(!empty($message)) {
-        $stmt = $pdo->prepare("
-            INSERT INTO commentaires (event_id, id_etudiant, message)
-            VALUES (:event_id, :id_etudiant, :message)
-        ");
-        $stmt->execute([
-            'event_id' => $event_id,
-            'id_etudiant' => $etudiant_id,
-            'message' => $message
-        ]);
-        header("Location: evenement.php?id=$event_id");
-        exit;
-    }
-}
-
 ?>
 
-
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<title><?= htmlspecialchars($event['nom_evenement']) ?> - JET</title>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment/locale/fr.js"></script>
-<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($event['nom_evenement']) ?> - ISSPT</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment/locale/fr.js"></script>
+          <style>
   /* =============================================
    STYLE ÉVÉNEMENT - PREMIUM & MODERNE
    ============================================= */
@@ -1133,218 +1189,339 @@ body {
   opacity: 1;
 }
 </style>
-</head>
-<body>
+
     <?php include "../includes/header.php"; ?>
 
-<!-- =============================== -->
-<!--         1️⃣ HERO HEADER         -->
-<!-- =============================== -->
-<header id="hero" class="hero-section" data-aos="fade-in">
-    <div class="hero-content">
-        <h1 class="hero-title"><?= htmlspecialchars($event['nom_evenement']) ?></h1>
-        <p class="hero-subtitle">
-            <?= htmlspecialchars($event['type_evenement']) ?> |
-            <?= date('d M Y', strtotime($event['event_start'])) ?> |
-            <?= htmlspecialchars($event['lieu']) ?>
-        </p>
+    <header id="hero" class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title"><?= htmlspecialchars($event['nom_evenement']) ?></h1>
+            <p class="hero-subtitle">
+                <?= htmlspecialchars(ucfirst($event['type_evenement'])) ?> | 
+                <?= date('d M Y', strtotime($event['event_start'])) ?> | 
+                <?= htmlspecialchars($event['lieu']) ?>
+            </p>
 
-        <div class="hero-buttons">
-            <a class="btn primary-btn" href="inscription.php?id=<?= $eventId ?>">S’inscrire / Réserver</a>
-            <a class="btn secondary-btn" href="index.php">Retour à l’accueil</a>
+            <div class="hero-buttons">
+                <?php if ($event['has_ticket'] == 1): ?>
+                    <?php if ($alreadyHasTicket && !empty($userTicket['ticket_image_path'])): ?>
+    <!-- Bouton pour la Photo (PNG) -->
+    <a class="btn success-btn download-ticket-trigger" href="<?= htmlspecialchars($userTicket['ticket_image_path']) ?>" download="Ticket_<?= $eventId ?>.png">
+        💾 Télécharger la photo de mon ticket
+    </a>
+
+    <!-- Bouton pour le PDF sur mesure -->
+    <?php if (!empty($userTicket['ticket_pdf_path'])): ?>
+        <a class="btn primary-btn download-ticket-trigger" href="<?= htmlspecialchars($userTicket['ticket_pdf_path']) ?>" target="_blank" download="Ticket_<?= $eventId ?>.pdf">
+            📄 Télécharger le PDF de mon ticket
+        </a>
+    <?php endif; ?>
+
+<?php else: ?>
+                        <button class="btn primary-btn" id="btnBookTicket">🎟️ Prendre mon ticket</button>
+                    <?php endif; ?>
+                <?php endif; ?>
+                <a class="btn secondary-btn" href="index.php">Retour à l’accueil</a>
+            </div>
+        </div>
+    </header>
+
+    <?php if ($event['has_ticket'] == 1 && $alreadyHasTicket): ?>
+        <section class="section ticket-display-section">
+            <h2 class="section-title">🎫 Votre Ticket obtenu</h2>
+            <div class="ticket-container-view">
+                <p class="ticket-status-msg">Vous avez déjà réservé votre place pour cet événement ! Voici votre badge d'accès :</p>
+                <?php if(!empty($userTicket['ticket_image_path'])): ?>
+                    <img class="user-ticket-image" src="<?= htmlspecialchars($userTicket['ticket_image_path']) ?>" alt="Mon Ticket">
+                    <br>
+                    <a class="btn primary-btn" href="<?= htmlspecialchars($userTicket['ticket_image_path']) ?>" download="Ticket_<?= $eventId ?>.png">📥 Télécharger l'image</a>
+                <?php else: ?>
+                    <p class="ticket-processing">Votre ticket est en cours de traitement visuel. Code de réservation : <strong><?= htmlspecialchars($userTicket['code_ticket']) ?></strong></p>
+                <?php endif; ?>
+            </div>
+        </section>
+    <?php endif; ?>
+
+    <section class="section description-section">
+        <h2 class="section-title">Description</h2>
+        <p class="event-description"><?= nl2br(htmlspecialchars($event['description'])) ?></p>
+        <?php if ($event['prix_ticket'] > 0): ?>
+            <p class="event-price">Prix public : <?= number_format($event['prix_ticket'], 2) ?> F CFA <small>(Gratuit pour les étudiants de l'Institut)</small></p>
+        <?php endif; ?>
+    </section>
+
+    <section class="section infos-section">
+        <h2 class="section-title">📌 Infos pratiques</h2>
+        <div class="info-grid">
+            <div class="info-item"><span>🗓️ Date :</span> <?= date('d M Y', strtotime($event['event_start'])) ?></div>
+            <div class="info-item"><span>🕒 Heure :</span> <?= date('H:i', strtotime($event['event_start'])) ?></div>
+            <div class="info-item"><span>📍 Lieu :</span> <?= htmlspecialchars($event['lieu']) ?></div>
+            <div class="info-item"><span>🎟️ Ticket :</span> <?= $event['has_ticket'] == 1 ? "Requis" : "Entrée Libre" ?></div>
+        </div>
+    </section>
+
+    <section class="section timer-section">
+        <h2 class="section-title">⏰ Compte à rebours</h2>
+        <div id="timer" class="timer-box"></div>
+    </section>
+
+    <?php if(count($artistes) > 0): ?>
+    <section class="section artists-section">
+        <h2 class="section-title">🎤 Artistes invités</h2>
+        <div class="artist-grid">
+            <?php foreach($artistes as $art): ?>
+            <div class="artist-card">
+                <?php if($art['photo']): ?>
+                    <img class="artist-photo" src="<?= htmlspecialchars($art['photo']) ?>" alt="<?= htmlspecialchars($art['nom_artiste']) ?>">
+                <?php endif; ?>
+                <h3 class="artist-name">
+                    <?= htmlspecialchars($art['nom_artiste']) ?>
+                    <?= $art['pseudonyme'] ? " (" . htmlspecialchars($art['pseudonyme']) . ")" : "" ?>
+                </h3>
+                <?php if($art['role']): ?>
+                    <p class="artist-role">Rôle : <?= htmlspecialchars($art['role']) ?></p>
+                <?php endif; ?>
+                <?php if($art['description']): ?>
+                    <p class="artist-description"><?= nl2br(htmlspecialchars($art['description'])) ?></p>
+                <?php endif; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <section class="section upload-section">
+        <h2 class="section-title">📤 Partagez vos moments</h2>
+        <form id="uploadForm" class="upload-form" enctype="multipart/form-data" method="post" action="">
+            <input type="hidden" name="event_id" value="<?= $eventId ?>">
+            <label class="form-label">Fichier :</label>
+            <small class="input-note">Image ou vidéo (max 5 Mo)</small>
+            <input type="file" class="input-file" name="file" accept="image/*,video/*" required>
+            
+            <label class="form-label">Commentaire / Légende :</label>
+            <textarea class="input-textarea" name="caption" rows="3" placeholder="Votre légende..."></textarea>
+            
+            <button class="btn primary-btn" type="submit" name="submit_upload">Envoyer le média</button>
+        </form>
+    </section>
+
+    <?php if(count($medias) > 0): ?>
+    <section class="section gallery-section">
+        <h2 class="section-title">🖼️ Galerie des moments</h2>
+        <div class="gallery">
+            <?php foreach($medias as $media): ?>
+                <div class="media-card">
+                    <?php if($media['file_type'] === 'image'): ?>
+                        <img class="media-image" src="<?= htmlspecialchars($media['file_path']) ?>" alt="<?= htmlspecialchars($media['caption']) ?>">
+                    <?php else: ?>
+                        <video class="media-video" src="<?= htmlspecialchars($media['file_path']) ?>" controls></video>
+                    <?php endif; ?>
+                    <?php if(!empty($media['caption'])): ?>
+                        <p class="media-caption"><?= nl2br(htmlspecialchars($media['caption'])) ?></p>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <section class="section comments-section">
+        <h2 class="section-title">💬 Commentaires</h2>
+        <?php if($isLogged): ?>
+            <form class="comment-form" method="post" action="evenement.php?id=<?= $eventId ?>">
+                <textarea class="comment-textarea" name="message" rows="3" placeholder="Votre commentaire..." required></textarea>
+                <button class="btn primary-btn" type="submit" name="submit_comment">Envoyer</button>
+            </form>
+        <?php else: ?>
+            <p class="comment-info">Veuillez vous connecter pour laisser un commentaire.</p>
+        <?php endif; ?>
+
+        <div class="comments-list">
+            <?php foreach($comments as $c): 
+                $authorName = "Utilisateur inconnu";
+                if ($c['user_type'] === 'etudiant' && !empty($c['etudiant_nom'])) {
+                    $authorName = $c['etudiant_prenom'] . ' ' . $c['etudiant_nom'];
+                } elseif ($c['user_type'] === 'admin') {
+                    if ($c['admin_role'] === 'bureau' && !empty($c['admin_etudiant_nom'])) {
+                        $authorName = $c['admin_etudiant_prenom'] . ' ' . $c['admin_etudiant_nom'];
+                    } elseif (!empty($c['admin_nom'])) {
+                        $authorName = $c['admin_prenom'] . ' ' . $c['admin_nom'] . ' (Admin)';
+                    }
+                }
+            ?>
+            <div class="comment-card">
+                <div class="comment-header">
+                    <strong class="comment-author"><?= htmlspecialchars($authorName) ?></strong>
+                    <span class="comment-date"><?= date('d M Y H:i', strtotime($c['date_commentaire'])) ?></span>
+                </div>
+                <p class="comment-text"><?= nl2br(htmlspecialchars($c['message'])) ?></p>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <div id="modalCheckStatus" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <h3 class="modal-title">Vérification d'accès</h3>
+            <p class="modal-text">Êtes-vous un étudiant inscrit au sein de notre institut ?</p>
+            <div class="modal-actions">
+                <button id="statusYes" class="btn primary-btn">Oui, je suis étudiant</button>
+                <button id="statusNo" class="btn secondary-btn">Non, je suis externe</button>
+                <button class="btn close-modal-btn">Annuler</button>
+            </div>
         </div>
     </div>
-</header>
 
-<!-- =============================== -->
-<!--      2️⃣ DESCRIPTION EVENT       -->
-<!-- =============================== -->
-<section class="section description-section" data-aos="fade-up">
-    <h2 class="section-title">Description</h2>
-
-    <p class="event-description"><?= nl2br(htmlspecialchars($event['description'])) ?></p>
-
-    <?php if ($event['prix_ticket'] > 0): ?>
-        <p class="event-price">Prix du ticket : <?= number_format($event['prix_ticket'], 2) ?> F</p>
-    <?php endif; ?>
-</section>
-
-<!-- =============================== -->
-<!--      3️⃣ INFORMATIONS PRATIQUES  -->
-<!-- =============================== -->
-<section class="section infos-section" data-aos="fade-up">
-    <h2 class="section-title">📌 Infos pratiques</h2>
-
-    <div class="info-grid">
-        <div class="info-item"><span>🗓️ Date :</span> <?= date('d M Y', strtotime($event['event_start'])) ?></div>
-        <div class="info-item"><span>🕒 Heure :</span> <?= date('H:i', strtotime($event['event_start'])) ?></div>
-        <div class="info-item"><span>📍 Lieu :</span> <?= htmlspecialchars($event['lieu']) ?></div>
-        <div class="info-item"><span>🎟️ Participation :</span> <?= $event['prix_ticket'] > 0 ? number_format($event['prix_ticket'], 2) . " F" : "Gratuit" ?></div>
+    <div id="modalExternalForm" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <h3 class="modal-title">Validation de votre place</h3>
+            <p class="modal-text">Les événements sont payants pour les externes. Veuillez saisir vos informations et le code fourni par l'administrateur.</p>
+            <div class="form-group">
+                <label class="form-label">Nom complet :</label>
+                <input type="text" id="extNom" class="form-control" placeholder="Ex: Jean Dupont" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adresse Email :</label>
+                <input type="email" id="extEmail" class="form-control" placeholder="Ex: jean@gmail.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Code de paiement reçu :</label>
+                <input type="text" id="extCode" class="form-control" placeholder="Saisir le code d'activation" required>
+            </div>
+            <div class="modal-actions">
+                <button id="submitExternalBooking" class="btn primary-btn">Valider mon Ticket</button>
+                <button class="btn close-modal-btn secondary-btn">Fermer</button>
+            </div>
+        </div>
     </div>
-</section>
 
-<!-- =============================== -->
-<!--         4️⃣ COMPTE À REBOURS     -->
-<!-- =============================== -->
-<section class="section timer-section" data-aos="fade-up">
-    <h2 class="section-title">⏰ Compte à rebours</h2>
-    <div id="timer" class="timer-box"></div>
-</section>
+    <?php include "../includes/footer.php"; ?>
 
-<script>
-const eventDate = moment("<?= $event['event_start'] ?>");
-function updateTimer() {
-    const now = moment();
-    const diff = eventDate.diff(now);
-    if(diff <= 0){
-        document.getElementById('timer').innerText = "L'événement a commencé !";
-        clearInterval(timerInterval);
+    <script>
+    // Configuration Moment.js
+    const eventDate = moment("<?= $event['event_start'] ?>");
+    function updateTimer() {
+        const now = moment();
+        const diff = eventDate.diff(now);
+        if(diff <= 0){
+            document.getElementById('timer').innerText = "L'événement a commencé !";
+            clearInterval(timerInterval);
+            return;
+        }
+        const duration = moment.duration(diff);
+        document.getElementById('timer').innerText = 
+            `${duration.days()}j ${duration.hours()}h ${duration.minutes()}m ${duration.seconds()}s`;
+    }
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Variables d'état PHP vers JS
+    const isLogged = <?= $isLogged ? 'true' : 'false' ?>;
+    const eventId = <?= $eventId ?>;
+
+    // Éléments DOM Modals
+    const btnBookTicket = document.getElementById('btnBookTicket');
+    const modalCheckStatus = document.getElementById('modalCheckStatus');
+    const modalExternalForm = document.getElementById('modalExternalForm');
+    
+    const statusYes = document.getElementById('statusYes');
+    const statusNo = document.getElementById('statusNo');
+    const submitExternalBooking = document.getElementById('submitExternalBooking');
+    const closeBtns = document.querySelectorAll('.close-modal-btn');
+
+    // Fermeture universelle des modals
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            modalCheckStatus.style.display = 'none';
+            modalExternalForm.style.display = 'none';
+        });
+    });
+
+    // Clic sur "Prendre mon ticket"
+    if (btnBookTicket) {
+        btnBookTicket.addEventListener('click', function() {
+            if (isLogged) {
+                // Utilisateur connecté -> Traitement immédiat en tâche de fond (Gratuit)
+                processTicketBooking();
+            } else {
+                // Non connecté -> On ouvre la première boîte de dialogue
+                modalCheckStatus.style.display = 'block';
+            }
+        });
+    }
+
+    // Réponse "Oui je suis étudiant"
+    statusYes.addEventListener('click', function() {
+        alert("Veuillez vous connecter pour bénéficier de votre accès gratuit étudiant.");
+        window.location.href = "login.php?redirect=evenement.php?id=" + eventId;
+    });
+
+    // Réponse "Non, je suis externe"
+    statusNo.addEventListener('click', function() {
+        modalCheckStatus.style.display = 'none';
+        modalExternalForm.style.display = 'block';
+    });
+
+    // Envoi du formulaire de validation externe
+    // Envoi du formulaire de validation externe
+submitExternalBooking.addEventListener('click', function() {
+    const nom = document.getElementById('extNom').value.trim();
+    const email = document.getElementById('extEmail').value.trim();
+    const code = document.getElementById('extCode').value.trim();
+
+    if(!nom || !email || !code) {
+        alert("Tous les champs sont obligatoires.");
         return;
     }
-    const duration = moment.duration(diff);
-    document.getElementById('timer').innerText = 
-        `${duration.days()}j ${duration.hours()}h ${duration.minutes()}m ${duration.seconds()}s`;
-}
-const timerInterval = setInterval(updateTimer, 1000);
-updateTimer();
-</script>
 
-<!-- =============================== -->
-<!--       5️⃣ ARTISTES / INVITÉS     -->
-<!-- =============================== -->
-<?php if(count($artistes) > 0): ?>
-<section class="section artists-section" data-aos="fade-up">
-    <h2 class="section-title">🎤 Artistes invités</h2>
+    let formData = new FormData();
+    formData.append('action', 'book_ticket');
+    formData.append('payment_code', code);
+    formData.append('nom', nom);
+    formData.append('email', email);
 
-    <div class="artist-grid">
-        <?php foreach($artistes as $art): ?>
-        <div class="artist-card">
-            <?php if($art['photo']): ?>
-            <img class="artist-photo" src="<?= htmlspecialchars($art['photo']) ?>" alt="<?= htmlspecialchars($art['nom_artiste']) ?>">
-            <?php endif; ?>
-
-            <h3 class="artist-name">
-                <?= htmlspecialchars($art['nom_artiste']) ?>
-                <?= $art['pseudonyme'] ? "(" . htmlspecialchars($art['pseudonyme']) . ")" : "" ?>
-            </h3>
-
-            <?php if($art['role']): ?>
-            <p class="artist-role">Rôle : <?= htmlspecialchars($art['role']) ?></p>
-            <?php endif; ?>
-
-            <?php if($art['description']): ?>
-            <p class="artist-description"><?= nl2br(htmlspecialchars($art['description'])) ?></p>
-            <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-    </div>
-</section>
-<?php endif; ?>
-
-<!-- =============================== -->
-<!--       6️⃣ UPLOAD MEDIA           -->
-<!-- =============================== -->
-<section class="section upload-section" data-aos="fade-up">
-    <h2 class="section-title">📤 Partagez vos moments</h2>
-
-    <form id="uploadForm" class="upload-form" enctype="multipart/form-data" method="post" action="">
-        <input type="hidden" name="event_id" value="<?= $eventId ?>">
-
-        <label>Fichier :</label>
-        <small class="input-note">Image ou vidéo (max 5 Mo)</small>
-        <input type="file" class="input-file" name="file" accept="image/*,video/*" required>
-
-        <label>Commentaire / Légende :</label>
-        <textarea class="input-textarea" name="caption" rows="3" placeholder="Votre commentaire..."></textarea>
-
-        <button class="btn primary-btn" type="submit" name="submit_upload">Envoyer</button>
-    </form>
-
-    <div id="uploadStatus" class="upload-status">
-        <?php if(isset($uploadMessage)) echo '<p>' . htmlspecialchars($uploadMessage) . '</p>'; ?>
-    </div>
-</section>
-
-<!-- =============================== -->
-<!--           7️⃣ GALERIE           -->
-<!-- =============================== -->
-<?php if(count($medias) > 0): ?>
-<section class="section gallery-section" data-aos="fade-up">
-    <h2 class="section-title">🖼️ Galerie des moments</h2>
-
-    <div class="gallery">
-        <?php
-        $stmtGalerie = $pdo->prepare("SELECT * FROM galerie WHERE event_id = :id ORDER BY uploaded_at DESC");
-        $stmtGalerie->execute(['id' => $eventId]);
-        $medias = $stmtGalerie->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach($medias as $media): ?>
-            <div class="media-card" data-aos="zoom-in">
-                <?php if($media['file_type'] === 'image'): ?>
-                    <img class="media-image" src="<?= htmlspecialchars($media['file_path']) ?>" alt="<?= htmlspecialchars($media['caption']) ?>">
-                <?php else: ?>
-                    <video class="media-video" src="<?= htmlspecialchars($media['file_path']) ?>" controls></video>
-                <?php endif; ?>
-
-                <?php if(!empty($media['caption'])): ?>
-                    <p class="media-caption"><?= nl2br(htmlspecialchars($media['caption'])) ?></p>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
-    </div>
-</section>
-<?php endif; ?>
-
-<!-- =============================== -->
-<!--         8️⃣ COMMENTAIRES         -->
-<!-- =============================== -->
-<section class="section comments-section" data-aos="fade-up">
-    <h2 class="section-title">💬 Commentaires</h2>
-
-    <?php if($isLogged): ?>
-    <form class="comment-form" method="post" action="evenement.php?id=<?= $eventId ?>">
-        <textarea class="comment-textarea" name="message" rows="3" placeholder="Votre commentaire..." required></textarea>
-        <button class="btn primary-btn" type="submit" name="submit_comment">Envoyer</button>
-    </form>
-    <?php else: ?>
-        <p class="comment-info">Veuillez vous connecter pour laisser un commentaire.</p>
-    <?php endif; ?>
-
-    <div class="comments-list">
-        <?php foreach($comments as $c):
-            $authorName = "Utilisateur inconnu";
-
-            if ($c['user_type'] === 'etudiant' && !empty($c['etudiant_nom'])) {
-                $authorName = $c['etudiant_prenom'] . ' ' . $c['etudiant_nom'];
-            } elseif ($c['user_type'] === 'admin') {
-                if ($c['admin_role'] === 'bureau' && !empty($c['admin_etudiant_nom'])) {
-                    $authorName = $c['admin_etudiant_prenom'] . ' ' . $c['admin_etudiant_nom'];
-                } elseif (!empty($c['admin_nom'])) {
-                    $authorName = $c['admin_prenom'] . ' ' . $c['admin_nom'] . ' (Admin)';
-                }
+    axios.post('evenement.php?id=' + eventId, formData)
+    .then(function (response) {
+        // BLINDAGE CONTRE LE UNDEFINED
+        if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+            alert(response.data.message);
+            if(response.data.success) {
+                window.location.reload();
             }
-        ?>
-        <div class="comment-card" data-aos="fade-up">
-            <div class="comment-header">
-                <strong class="comment-author"><?= htmlspecialchars($authorName) ?></strong>
-                <span class="comment-date"><?= date('d M Y H:i', strtotime($c['date_commentaire'])) ?></span>
-            </div>
+        } else {
+            // Si la réponse n'est pas du JSON valide, on affiche le contenu brut reçu du serveur
+            console.error("Réponse brute du serveur :", response.data);
+            alert("Erreur du serveur (réponse corrompue) : " + String(response.data).substring(0, 300));
+        }
+    })
+    .catch(function (error) {
+        console.error(error);
+        alert("Une erreur s'est produite lors de la communication avec le serveur.");
+    });
+});
 
-            <p class="comment-text"><?= nl2br(htmlspecialchars($c['message'])) ?></p>
-        </div>
-        <?php endforeach; ?>
-    </div>
-</section>
+    // Fonction d'inscription automatique pour les connectés
+    // Fonction d'inscription automatique pour les connectés
+function processTicketBooking() {
+    let formData = new FormData();
+    formData.append('action', 'book_ticket');
 
-<!-- =============================== -->
-<!--         9️⃣ CALL TO ACTION       -->
-<!-- =============================== -->
-<section class="section cta-section" data-aos="fade-up">
-    <h2 class="cta-title">🎉 Participez maintenant !</h2>
-    <a class="btn primary-btn" href="inscription.php?id=<?= $eventId ?>">S’inscrire / Réserver</a>
-</section>
-
-<?php include "../includes/footer.php"; ?>
-</body>
-
-</html>
+    axios.post('evenement.php?id=' + eventId, formData)
+    .then(function (response) {
+        // BLINDAGE CONTRE LE UNDEFINED
+        if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+            alert(response.data.message);
+            if(response.data.success) {
+                window.location.reload();
+            }
+        } else {
+            // Si la réponse n'est pas du JSON valide, on affiche le contenu brut reçu du serveur
+            console.error("Réponse brute du serveur :", response.data);
+            alert("Erreur du serveur (réponse corrompue) : " + String(response.data).substring(0, 300));
+        }
+    })
+    .catch(function (error) {
+        console.error(error);
+        alert("Erreur système lors de la génération automatique.");
+    });
+}
+    </script>

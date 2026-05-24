@@ -185,7 +185,472 @@ $commentaires = $commentaires->fetchAll(PDO::FETCH_ASSOC);
 
 ob_start();
 ?>
+<style>
+    /* ==========================================================================
+   Variables & Configuration Globale
+   ========================================================================== */
+:root {
+    /* Colors - Dark Theme (default) */
+    --primary-900: #080020;
+    --primary-800: #0a0127;
+    --primary-700: #120c3a;
+    --primary-600: #1a1849;
+    --accent-red: #ff4757;
+    --accent-blue: #2e86de;
+    --accent-green: #10ac84;
+    --white: #ffffff;
+    --gray-50: #f8f9fa;
+    --gray-100: #f1f2f6;
+    --gray-200: #dfe4ea;
+    --gray-300: #ced6e0;
+    --gray-400: #a4b0be;
 
+    /* Sidebar */
+    --sidebar-width: 280px;
+    --sidebar-width-collapsed: 70px;
+    --sidebar-bg: linear-gradient(180deg, var(--primary-900) 0%, var(--primary-800) 100%);
+    --sidebar-border: 1px solid rgba(255, 255, 255, 0.05);
+    --sidebar-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    
+    /* Typography */
+    --font-primary: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-size-xs: 0.75rem;   /* 12px */
+    --font-size-sm: 0.875rem;  /* 14px */
+    --font-size-md: 1rem;      /* 16px */
+    --font-size-lg: 1.125rem;  /* 18px */
+    --font-size-xl: 1.25rem;   /* 20px */
+    
+    /* Spacing */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.5rem;    /* 24px */
+    --space-6: 2rem;      /* 32px */
+    
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+    --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.3);
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+    
+    /* Z-index */
+    --z-sidebar: 1000;
+    --z-overlay: 999;
+    --z-mobile-toggle: 1001;
+
+    /* Base Layout Extra Tokens */
+    --bg-main: #060018;
+    --card-bg: #110933;
+    --card-border: rgba(255, 255, 255, 0.06);
+    --text-muted: #8a94a6;
+}
+
+/* Base resets pour intégration propre */
+body {
+    background-color: var(--bg-main);
+    color: var(--gray-100);
+    font-family: var(--font-primary);
+    margin: 0;
+    padding: var(--space-5);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Container principal de l'application (ajuste l'espace selon la présence de ta sidebar) */
+.main-content, main, .content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Header de la Page
+   ========================================================================== */
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.page-header h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--white);
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   Composants Cartes (Sections)
+   ========================================================================== */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.card h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--white);
+    margin-top: 0;
+    margin-bottom: var(--space-4);
+    position: relative;
+    padding-left: var(--space-3);
+}
+
+.card h3::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    height: 70%;
+    width: 4px;
+    background: var(--accent-blue);
+    border-radius: var(--radius-full);
+}
+
+.card p {
+    margin: 0 0 var(--space-3) 0;
+    color: var(--gray-200);
+    font-size: var(--font-size-md);
+}
+
+.card p strong {
+    color: var(--gray-400);
+    font-weight: 500;
+    display: inline-block;
+    min-width: 160px;
+}
+
+.card p:last-child {
+    margin-bottom: 0;
+}
+
+/* Section de description spécifique */
+.card p br + text, 
+.card p:has(br) {
+    line-height: 1.7;
+    color: var(--gray-100);
+}
+
+/* ==========================================================================
+   Boutons & Formulaires
+   ========================================================================== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    gap: var(--space-2);
+    white-space: nowrap;
+}
+
+.btn-sm {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+}
+
+.btn-primary {
+    background-color: var(--accent-blue);
+    color: var(--white);
+}
+.btn-primary:hover {
+    background-color: #2475c4;
+    box-shadow: 0 0 12px rgba(46, 134, 222, 0.4);
+}
+
+.btn-secondary {
+    background-color: var(--primary-600);
+    color: var(--gray-200);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.btn-secondary:hover {
+    background-color: var(--primary-700);
+    color: var(--white);
+}
+
+.btn-success {
+    background-color: var(--accent-green);
+    color: var(--white);
+}
+.btn-success:hover {
+    background-color: #0e9572;
+    box-shadow: 0 0 12px rgba(16, 172, 132, 0.4);
+}
+
+.btn-danger {
+    background-color: var(--accent-red);
+    color: var(--white);
+}
+.btn-danger:hover {
+    background-color: #ee3545;
+    box-shadow: 0 0 12px rgba(255, 71, 87, 0.4);
+}
+
+form {
+    display: inline-block;
+    margin: 0;
+}
+
+/* ==========================================================================
+   Tableaux (Inscriptions & Participants)
+   ========================================================================== */
+/* Wrapper pour forcer le scroll horizontal proprement sans casser le layout */
+.card:has(table) {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-600) transparent;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    margin-top: var(--space-2);
+    font-size: var(--font-size-sm);
+    min-width: 600px; /* Assure une structure lisible même sur mobile */
+}
+
+th {
+    background-color: rgba(255, 255, 255, 0.03);
+    color: var(--gray-400);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.05em;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 2px solid var(--primary-600);
+}
+
+td {
+    padding: var(--space-4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--gray-200);
+    vertical-align: middle;
+}
+
+tr:hover td {
+    background-color: rgba(255, 255, 255, 0.01);
+    color: var(--white);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* On stylise les indices de lignes */
+td:first-child {
+    color: var(--text-muted);
+    font-weight: 600;
+    width: 40px;
+}
+
+/* ==========================================================================
+   Galerie Média
+   ========================================================================== */
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-3);
+}
+
+.media-box {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-3);
+    position: relative;
+    overflow: hidden;
+}
+
+.media-box img, 
+.media-box video {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background-color: var(--primary-900);
+}
+
+.media-box p {
+    font-size: var(--font-size-xs);
+    color: var(--gray-300);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.media-box .btn-danger {
+    width: 100%;
+    margin-top: auto;
+}
+
+/* ==========================================================================
+   Zone de Commentaires
+   ========================================================================== */
+.comment {
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 3px solid var(--primary-600);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+    position: relative;
+    transition: background var(--transition-fast);
+}
+
+.comment:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.comment:last-of-type {
+    margin-bottom: 0;
+}
+
+.comment strong {
+    font-size: var(--font-size-sm);
+    color: var(--white);
+    display: inline-block;
+    margin-right: var(--space-2);
+}
+
+/* Différenciation Admin / Étudiant discrète et pro */
+.comment strong:contains('(Admin)') {
+    color: var(--accent-blue);
+}
+
+.comment small {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    display: inline-block;
+}
+
+.comment p {
+    margin: var(--space-2) 0;
+    font-size: var(--font-size-md);
+    color: var(--gray-100);
+    word-break: break-word;
+}
+
+/* Note / Évaluation */
+.comment p:has(strong) {
+    font-size: var(--font-size-sm);
+    color: var(--accent-blue);
+    margin-bottom: var(--space-3);
+}
+
+.comment .btn-danger {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    opacity: 0.3; /* Reste discret tant qu'on ne passe pas dessus */
+    transition: opacity var(--transition-fast);
+}
+
+.comment:hover .btn-danger {
+    opacity: 1;
+}
+
+/* Message vide */
+.card > p:only-of-type {
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--space-2) 0;
+}
+
+/* ==========================================================================
+   Media Queries & Responsivité Totale
+   ========================================================================== */
+
+/* Tablettes et écrans intermédiaires */
+@media (max-width: 768px) {
+    body {
+        padding: var(--space-3);
+    }
+
+    .card {
+        padding: var(--space-4);
+    }
+
+    .card p strong {
+        display: block;
+        margin-bottom: var(--space-1);
+    }
+    
+    .comment .btn-danger {
+        position: relative;
+        top: 0;
+        right: 0;
+        opacity: 1;
+        margin-top: var(--space-2);
+    }
+}
+
+/* Smartphones et petits écrans */
+@media (max-width: 480px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+    }
+
+    .page-header .btn {
+        width: 100%;
+    }
+
+    .gallery {
+        grid-template-columns: 1fr; /* Une seule colonne sur tout petit écran */
+    }
+
+    .media-box img, 
+    .media-box video {
+        height: 200px; /* Légèrement plus grand pour le confort visuel sur mobile */
+    }
+}
+</style>
 <div class="page-header">
     <h2><?= htmlspecialchars($activite['nom_activite']) ?></h2>
     <a href="activites.php" class="btn btn-secondary">← Retour</a>
@@ -354,67 +819,6 @@ ob_start();
     <?php endif; ?>
 </section>
 
-
-
-
-
-<style>
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-.card {
-    background: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 25px;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-th, td {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-}
-.btn-success {
-    background: #28a745;
-    color: #fff;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 4px;
-}
-
-.gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 15px;
-}
-.media-box img,
-.media-box video {
-    width: 100%;
-    border-radius: 6px;
-}
-.media-box {
-    background: #f9f9f9;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-}
-.comment {
-    border-bottom: 1px solid #ddd;
-    padding: 10px 0;
-}
-.btn-danger {
-    background: #dc3545;
-    color: #fff;
-    border: none;
-    padding: 6px 10px;
-    border-radius: 4px;
-}
-
-</style>
 
 <?php
 $content = ob_get_clean();

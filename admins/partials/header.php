@@ -30,192 +30,6 @@ $notifications = [
 ];
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <!-- Header Principal -->
-    <header class="admin-header">
-        <!-- Section gauche avec titre et recherche -->
-        <div class="header-left">
-            <!-- Titre dynamique basé sur la page -->
-            <div class="page-title">
-                <h1 id="pageTitle"><?= $pageTitle ?? 'Tableau de bord' ?></h1>
-                <div class="breadcrumb" id="breadcrumb">
-                    <a href="<?= BASE_URL ?>dashboard.php">Dashboard</a>
-                    <i class="fas fa-chevron-right"></i>
-                    <span><?= $pageTitle ?? 'Accueil' ?></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section droite avec actions et profil -->
-        <div class="header-right">
-            <!-- Barre de recherche -->
-            <div class="search-container">
-                <button class="search-toggle" id="searchToggle">
-                    <i class="fas fa-search"></i>
-                </button>
-                <div class="search-box" id="searchBox">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Rechercher un étudiant, une épreuve...">
-                    <button class="search-close" id="searchClose">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div class="search-results" id="searchResults"></div>
-                </div>
-            </div>
-
-            <!-- Notifications -->
-            <div class="notifications-container">
-                <button class="notification-btn" id="notificationBtn">
-                    <i class="fas fa-bell"></i>
-                    <?php if ($notifications['unread'] > 0): ?>
-                    <span class="notification-badge"><?= $notifications['unread'] ?></span>
-                    <?php endif; ?>
-                </button>
-                <div class="notifications-dropdown" id="notificationsDropdown">
-                    <div class="dropdown-header">
-                        <h3>Notifications</h3>
-                        <?php if ($notifications['unread'] > 0): ?>
-                        <button class="mark-all-read" id="markAllRead">
-                            <i class="fas fa-check-double"></i>
-                            Tout marquer comme lu
-                        </button>
-                        <?php endif; ?>
-                    </div>
-                    <div class="notifications-list">
-                        <?php if (empty($notifications['items'])): ?>
-                        <div class="empty-notifications">
-                            <i class="fas fa-bell-slash"></i>
-                            <p>Aucune notification</p>
-                        </div>
-                        <?php else: ?>
-                            <?php foreach ($notifications['items'] as $notification): ?>
-                            <div class="notification-item <?= $notification['unread'] ? 'unread' : '' ?>">
-                                <div class="notification-icon">
-                                    <i class="fas fa-<?= $notification['icon'] ?>"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <p class="notification-text"><?= $notification['text'] ?></p>
-                                    <span class="notification-time"><?= $notification['time'] ?></span>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="dropdown-footer">
-                        <a href="<?= BASE_URL ?>notifications.php" class="view-all">
-                            Voir toutes les notifications
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <button class="action-btn" id="quickActionBtn" title="Actions rapides">
-                    <i class="fas fa-bolt"></i>
-                </button>
-                <div class="actions-dropdown" id="actionsDropdown">
-                    <a href="<?= BASE_URL ?>users/etudiants.php" class="action-item">
-                        <i class="fas fa-user-plus"></i>
-                        <span>Ajouter un étudiant</span>
-                    </a>
-                    <a href="<?= BASE_URL ?>epreuve/index.php" class="action-item">
-                        <i class="fas fa-file-upload"></i>
-                        <span>Nouvelle épreuve</span>
-                    </a>
-                    <a href="<?= BASE_URL ?>evenement/evenements.php" class="action-item">
-                        <i class="fas fa-calendar-plus"></i>
-                        <span>Créer un événement</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="<?= BASE_URL ?>settings.php" class="action-item">
-                        <i class="fas fa-cog"></i>
-                        <span>Paramètres rapides</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Profil Utilisateur -->
-            <div class="profile-container">
-                <button class="profile-btn" id="profileBtn">
-                    <div class="profile-avatar">
-                        <img src="../uploads/admins/<?= htmlspecialchars($adminPhoto) ?>" 
-                             alt="<?= htmlspecialchars("$prenom $nom") ?>"
-                             onerror="this.src='../assets/default/avatar.png'">
-                        <div class="user-status"></div>
-                    </div>
-                    <div class="profile-info">
-                        <span class="user-name"><?= htmlspecialchars($prenom) ?></span>
-                        <span class="user-role"><?= htmlspecialchars(ucfirst($_SESSION['admin_role'])) ?></span>
-                    </div>
-                    <i class="fas fa-chevron-down dropdown-arrow"></i>
-                </button>
-                
-                <div class="profile-dropdown" id="profileDropdown">
-                    <div class="dropdown-profile-header">
-                        <div class="dropdown-avatar">
-                            <img src="../uploads/admins/<?= htmlspecialchars($adminPhoto) ?>" 
-                                 alt="<?= htmlspecialchars("$prenom $nom") ?>"
-                                 onerror="this.src='../assets/default/avatar.png'">
-                        </div>
-                        <div class="dropdown-profile-info">
-                            <h4><?= htmlspecialchars("$prenom $nom") ?></h4>
-                            <p><?= htmlspecialchars($adminEmail) ?></p>
-                            <span class="dropdown-role"><?= htmlspecialchars(ucfirst($_SESSION['admin_role'])) ?></span>
-                        </div>
-                    </div>
-                    
-                    <div class="dropdown-menu">
-                        <a href="<?= BASE_URL ?>profile.php" class="dropdown-item">
-                            <i class="fas fa-user-circle"></i>
-                            <span>Mon profil</span>
-                        </a>
-                        <a href="<?= BASE_URL ?>settings.php" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            <span>Paramètres</span>
-                        </a>
-                        <a href="<?= BASE_URL ?>security.php" class="dropdown-item">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Sécurité</span>
-                        </a>
-                        
-                        <div class="dropdown-divider"></div>
-                        
-                        <a href="<?= BASE_URL ?>help.php" class="dropdown-item">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Aide & Support</span>
-                        </a>
-                        <a href="<?= BASE_URL ?>feedback.php" class="dropdown-item">
-                            <i class="fas fa-comment-alt"></i>
-                            <span>Donner votre avis</span>
-                        </a>
-                        
-                        <div class="dropdown-divider"></div>
-                        
-                        <a href="<?= BASE_URL ?>logout.php" class="dropdown-item logout">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Déconnexion</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Menu Mobile -->
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <i class="fas fa-ellipsis-v"></i>
-            </button>
-        </div>
-
-        <!-- Overlay pour dropdowns mobile -->
-        <div class="header-overlay" id="headerOverlay"></div>
-    </header>
 
     <style>
         /* ============================================
@@ -1002,7 +816,184 @@ $notifications = [
             }
         }
     </style>
+<!-- Header Principal -->
+    <header class="admin-header">
+        <!-- Section gauche avec titre et recherche -->
+        <div class="header-left">
+            <!-- Titre dynamique basé sur la page -->
+            <div class="page-title">
+                <h1 id="pageTitle"><?= $pageTitle ?? 'Tableau de bord' ?></h1>
+                <div class="breadcrumb" id="breadcrumb">
+                    <a href="<?= BASE_URL ?>dashboard.php">Dashboard</a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span><?= $pageTitle ?? 'Accueil' ?></span>
+                </div>
+            </div>
+        </div>
 
+        <!-- Section droite avec actions et profil -->
+        <div class="header-right">
+            <!-- Barre de recherche -->
+            <div class="search-container">
+                <button class="search-toggle" id="searchToggle">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="search-box" id="searchBox">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Rechercher un étudiant, une épreuve...">
+                    <button class="search-close" id="searchClose">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="notifications-container">
+                <button class="notification-btn" id="notificationBtn">
+                    <i class="fas fa-bell"></i>
+                    <?php if ($notifications['unread'] > 0): ?>
+                    <span class="notification-badge"><?= $notifications['unread'] ?></span>
+                    <?php endif; ?>
+                </button>
+                <div class="notifications-dropdown" id="notificationsDropdown">
+                    <div class="dropdown-header">
+                        <h3>Notifications</h3>
+                        <?php if ($notifications['unread'] > 0): ?>
+                        <button class="mark-all-read" id="markAllRead">
+                            <i class="fas fa-check-double"></i>
+                            Tout marquer comme lu
+                        </button>
+                        <?php endif; ?>
+                    </div>
+                    <div class="notifications-list">
+                        <?php if (empty($notifications['items'])): ?>
+                        <div class="empty-notifications">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>Aucune notification</p>
+                        </div>
+                        <?php else: ?>
+                            <?php foreach ($notifications['items'] as $notification): ?>
+                            <div class="notification-item <?= $notification['unread'] ? 'unread' : '' ?>">
+                                <div class="notification-icon">
+                                    <i class="fas fa-<?= $notification['icon'] ?>"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <p class="notification-text"><?= $notification['text'] ?></p>
+                                    <span class="notification-time"><?= $notification['time'] ?></span>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <div class="dropdown-footer">
+                        <a href="<?= BASE_URL ?>notifications.php" class="view-all">
+                            Voir toutes les notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="action-btn" id="quickActionBtn" title="Actions rapides">
+                    <i class="fas fa-bolt"></i>
+                </button>
+                <div class="actions-dropdown" id="actionsDropdown">
+                    <a href="<?= BASE_URL ?>users/etudiants.php" class="action-item">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Ajouter un étudiant</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>epreuve/index.php" class="action-item">
+                        <i class="fas fa-file-upload"></i>
+                        <span>Nouvelle épreuve</span>
+                    </a>
+                    <a href="<?= BASE_URL ?>evenement/evenements.php" class="action-item">
+                        <i class="fas fa-calendar-plus"></i>
+                        <span>Créer un événement</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="<?= BASE_URL ?>settings.php" class="action-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Paramètres rapides</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Profil Utilisateur -->
+            <div class="profile-container">
+                <button class="profile-btn" id="profileBtn">
+                    <div class="profile-avatar">
+                        <img src="../uploads/admins/<?= htmlspecialchars($adminPhoto) ?>" 
+                             alt="<?= htmlspecialchars("$prenom $nom") ?>"
+                             onerror="this.src='../assets/default/avatar.png'">
+                        <div class="user-status"></div>
+                    </div>
+                    <div class="profile-info">
+                        <span class="user-name"><?= htmlspecialchars($prenom) ?></span>
+                        <span class="user-role"><?= htmlspecialchars(ucfirst($_SESSION['admin_role'])) ?></span>
+                    </div>
+                    <i class="fas fa-chevron-down dropdown-arrow"></i>
+                </button>
+                
+                <div class="profile-dropdown" id="profileDropdown">
+                    <div class="dropdown-profile-header">
+                        <div class="dropdown-avatar">
+                            <img src="../uploads/photos_etudiants/<?= htmlspecialchars($adminPhoto) ?>" 
+                                 alt="<?= htmlspecialchars("$prenom $nom") ?>"
+                                 onerror="this.src='../assets/default/avatar.png'">
+                        </div>
+                        <div class="dropdown-profile-info">
+                            <h4><?= htmlspecialchars("$prenom $nom") ?></h4>
+                            <p><?= htmlspecialchars($adminEmail) ?></p>
+                            <span class="dropdown-role"><?= htmlspecialchars(ucfirst($_SESSION['admin_role'])) ?></span>
+                        </div>
+                    </div>
+                    
+                    <div class="dropdown-menu">
+                        <a href="<?= BASE_URL ?>profile.php" class="dropdown-item">
+                            <i class="fas fa-user-circle"></i>
+                            <span>Mon profil</span>
+                        </a>
+                        <a href="<?= BASE_URL ?>settings.php" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Paramètres</span>
+                        </a>
+                        <a href="<?= BASE_URL ?>security.php" class="dropdown-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Sécurité</span>
+                        </a>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <a href="<?= BASE_URL ?>help.php" class="dropdown-item">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Aide & Support</span>
+                        </a>
+                        <a href="<?= BASE_URL ?>feedback.php" class="dropdown-item">
+                            <i class="fas fa-comment-alt"></i>
+                            <span>Donner votre avis</span>
+                        </a>
+                        
+                        <div class="dropdown-divider"></div>
+                        
+                        <a href="<?= BASE_URL ?>logout.php" class="dropdown-item logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Déconnexion</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu Mobile -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+        </div>
+
+        <!-- Overlay pour dropdowns mobile -->
+        <div class="header-overlay" id="headerOverlay"></div>
+    </header>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Variables
@@ -1244,5 +1235,3 @@ $notifications = [
             });
         });
     </script>
-</body>
-</html>

@@ -129,9 +129,7 @@ $commentaires = $pdo->prepare("
 $commentaires->execute([$id]);
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Détails Activité - <?= htmlspecialchars($activite['nom_activite'] ?? '') ?></title>
@@ -575,8 +573,7 @@ $commentaires->execute([$id]);
             100% { background-position: -200% 0; }
         }
     </style>
-</head>
-<body>
+
     <?php include "../includes/header.php"; ?>
 
     <div class="page-container">
@@ -940,5 +937,3 @@ $commentaires->execute([$id]);
             });
         });
     </script>
-</body>
-</html>

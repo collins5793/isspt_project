@@ -134,9 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$inscription_existante && !$est_cl
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - <?= htmlspecialchars($activite['nom_activite'] ?? '') ?> | ISSPT</title>
@@ -552,8 +550,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$inscription_existante && !$est_cl
             background: var(--secondary-blue);
         }
     </style>
-</head>
-<body>
+
     <?php include "../includes/header.php"; ?>
 
     <div class="registration-container">
@@ -861,5 +858,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$inscription_existante && !$est_cl
             });
         });
     </script>
-</body>
-</html>

@@ -1,35 +1,62 @@
 <?php
-require_once 'db.php'; // connexion PDO
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once 'db.php'; // Connexion PDO
 
+// --- BASE_URL DYNAMIQUE ---
+// Détecte automatiquement le protocole (http ou https) et le dossier racine du projet
+if (!defined('BASE_URL')) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+    $host = $_SERVER['HTTP_HOST'];
+    
+    // Récupère le chemin du dossier contenant le script actuel
+    $script_name = $_SERVER['SCRIPT_NAME'];
+    $dir = dirname($script_name);
+    
+    // Si on est dans un sous-dossier (ex: /isspt_projet/includes ou /isspt_projet/jet)
+    // On extrait uniquement le dossier principal du projet "/isspt_projet/"
+    $parts = explode('/', trim($dir, '/'));
+    $project_folder = !empty($parts[0]) ? '/' . $parts[0] . '/' : '/';
+    
+    define('BASE_URL', $project_folder);
+}
+$base_url = BASE_URL;
 
-// Vérification si un étudiant est connecté
+// Initialisation des variables globales
+$isLogged = false;
+$isAdmin = false;
+$userName = '';
+$userAvatar = 'assets/images/default-avatar.png'; // Avatar par défaut relatif
+
+// --- VÉRIFICATION DE LA CONNEXION ÉTUDIANT ---
 if (isset($_SESSION['etudiant_id'])) {
     $stmt = $pdo->prepare("SELECT nom, prenom, photo FROM etudiants WHERE id_etudiant = ? AND statut = 'actif'");
     $stmt->execute([$_SESSION['etudiant_id']]);
     $etudiant = $stmt->fetch(PDO::FETCH_ASSOC);
+    
     if ($etudiant) {
         $isLogged = true;
         $userName = $etudiant['prenom'] . ' ' . $etudiant['nom'];
-        if (!empty($etudiant['photo'])){
-
-         $userAvatar = '/uploads/photos_etudiants/' . $etudiant['photo'];
-        } else {
-         $userAvatar = 'assets/images/default-avatar.png';
+        if (!empty($etudiant['photo'])) {
+            // Stockage du chemin direct depuis la racine web
+            $userAvatar = 'uploads/photos_etudiants/' . $etudiant['photo'];
         }
     } else {
         // Déconnecter si l'étudiant n'existe pas ou est inactif
         session_unset();
         session_destroy();
-        header("Location: login.php");
+        header("Location: " . $base_url . "etudiant/login_etudiant.php");
         exit;
     }
 }
 
-// Vérification si un administrateur est connecté
+// --- VÉRIFICATION DE LA CONNEXION ADMINISTRATEUR ---
 if (isset($_SESSION['admin_id'])) {
     $stmt = $pdo->prepare("SELECT nom, prenom, role FROM administrateurs WHERE id_admin = ?");
     $stmt->execute([$_SESSION['admin_id']]);
     $admin = $stmt->fetch(PDO::FETCH_ASSOC);
+    
     if ($admin) {
         $isLogged = true;
         $isAdmin = true;
@@ -37,47 +64,37 @@ if (isset($_SESSION['admin_id'])) {
     } else {
         session_unset();
         session_destroy();
-        header("Location: login.php");
+        header("Location: " . $base_url . "etudiant/login_etudiant.php");
         exit;
     }
 }
 ?>
-<!-- <!DOCTYPE html>
-<html lang="fr">
+<!DOCTYPE html>
+<html lang="fr">  
 <head>
-
-    <!-- Encodage -->
     <meta charset="UTF-8">
 
-    <!-- Responsive mobile -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Compatibilité navigateur -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <!-- Titre du site -->
-    <title>Mon Site Web</title>
+    <title>Portail Numérique - Institut Supérieur Saint Paul Tarse</title>
 
-    <!-- Description SEO -->
-    <meta name="description" content="Description de votre site web ici">
+    <meta name="description" content="Plateforme officielle d'accès aux ressources, épreuves et activités de l'Institut Supérieur Saint Paul Tarse.">
 
-    <!-- Auteur -->
-    <meta name="author" content="Collins Tossou">
+    <meta name="author" content="Étudiants de Système Informatique et Logiciel - ISSPT">
 
-    <!-- Mots clés (facultatif aujourd'hui mais certains le mettent encore) -->
-    <meta name="keywords" content="site web, application, technologie">
+    <link rel="icon" type="image/png" href="<?= $base_url ?>assets/images/logo.png">
+    <link rel="apple-touch-icon" href="<?= $base_url ?>assets/images/logo.png">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="assets/images/logo.png">
-
-    <!-- CSS principal -->
-    <link rel="stylesheet" href="/assets/css/style.css">
-
-    <!-- Google Fonts (optionnel) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-</head> -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="<?= $base_url ?>assets/css/style.css">
+    
 <style>
     /* ===== VARIABLES CSS ===== */
 :root {
@@ -593,71 +610,59 @@ if (isset($_SESSION['admin_id'])) {
   outline-offset: 2px;
 }
 </style>
-
+</head>
+<body>
 
 <header class="main-header">
 
-  <!-- Logo + Nom université -->
-  <div class="header-left">
-    <a href="<?= $base_url ?>index.php" class="header-logo">
-      <img src="<?= $base_url ?>assets/images/logo.png" alt="Logo Université">
-      <div class="header-title">
-        <h1>Université Superieur Saint Paul Tarse</h1>
-        <span>Portail Étudiant</span>
-      </div>
-    </a>
-  </div>
+    <div class="header-left">
+        <a href="<?= $base_url ?>index.php" class="header-logo">
+            <img src="<?= $base_url ?>assets/images/logo.png" alt="Logo ISSPT">
+            <div class="header-title">
+                <h1>Institut Supérieur Saint Paul Tarse</h1>
+                <span>Portail Étudiant</span>
+            </div>
+        </a>
+    </div>
 
-  <!-- Menu principal -->
-  <nav class="header-nav">
-      <ul>
-        <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
-        <li><a href="<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
-        <li><a href="<?= $base_url ?>epreuves/index.php">Épreuves</a></li>
-        <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
-        <li><a href="<?= $base_url ?>equipe_devs.php">Équipe de Développement</a></li>
-      </ul>
-  </nav>
-
-  <!-- Boutons utilisateur -->
-  <div class="header-right">
-
-    <!-- Recherche
-    <div class="header-search">
-      <input type="text" placeholder="Rechercher...">
-      <i class="fas fa-search"></i>
-    </div> -->
-
-    <!-- Si l'utilisateur n'est pas connecté -->
-    <?php if (!$isLogged): ?>
-      <a href="<?= $base_url ?>etudiant/login_etudiant.php" class="header-login-btn">
-        <i class="fas fa-user"></i> Connexion
-      </a>
-    <?php else: ?>
-      <!-- Si l'utilisateur est connecté -->
-      <div class="header-user">
-        <span class="user-avatar">
-          <img src="<?= $base_url ?><?= $userAvatar ?>" alt="Avatar" />
-        </span>
-        <span class="user-name"><?= htmlspecialchars($userName) ?></span>
-        <i class="fas fa-chevron-down"></i>
-
-        <!-- Menu déroulant -->
-        <ul class="user-dropdown">
-          <li><a href="../profil.php"><i class="fas fa-id-badge"></i> Mon profil</a></li>
-          <?php if ($isAdmin): ?>
-            <li><a href="<?= $base_url ?>admins/dashboard.php"><i class="fas fa-cog"></i> Espace admin</a></li>
-          <?php endif; ?>
-          <li><a href="<?= $base_url ?>logout.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+    <nav class="header-nav">
+        <ul>
+            <li><a href="<?= $base_url ?>index.php">Accueil</a></li>
+            <li><a href="<?= $base_url ?>jet/index.php">Activités & Événements</a></li>
+            <li><a href="<?= $base_url ?>epreuves/index.php">Épreuves</a></li>
+            <li><a href="<?= $base_url ?>contact.php">Contact</a></li>
+            <li><a href="<?= $base_url ?>equipe_devs.php">Équipe de Développement</a></li>
         </ul>
-      </div>
-    <?php endif; ?>
+    </nav>
 
-  </div>
+    <div class="header-right">
 
-  <!-- Burger menu pour mobile -->
-  <div class="burger-menu">
-    <i class="fas fa-bars"></i>
-  </div>
+        <?php if (!$isLogged): ?>
+            <a href="<?= $base_url ?>etudiant/login_etudiant.php" class="header-login-btn">
+                <i class="fas fa-user"></i> Connexion
+            </a>
+        <?php else: ?>
+            <div class="header-user">
+                <span class="user-avatar">
+                    <img src="<?= $base_url . $userAvatar ?>" alt="Avatar de <?= htmlspecialchars($userName) ?>" />
+                </span>
+                <span class="user-name"><?= htmlspecialchars($userName) ?></span>
+                <i class="fas fa-chevron-down"></i>
+
+                <ul class="user-dropdown">
+                    <li><a href="<?= $base_url ?>profil.php"><i class="fas fa-id-badge"></i> Mon profil</a></li>
+                    <?php if ($isAdmin): ?>
+                        <li><a href="<?= $base_url ?>admins/dashboard.php"><i class="fas fa-cog"></i> Espace admin</a></li>
+                    <?php endif; ?>
+                    <li><a href="<?= $base_url ?>logout.php"><i class="fas fa-sign-out-alt"></i> Déconnexion</a></li>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+    </div>
+
+    <div class="burger-menu">
+        <i class="fas fa-bars"></i>
+    </div>
 
 </header>

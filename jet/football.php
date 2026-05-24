@@ -177,9 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
 <meta charset="UTF-8">
 <title>Football Universitaire - <?= htmlspecialchars($season['label']) ?> | ISSPT</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1828,8 +1826,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['message']) && !empty
         }
     }
 </style>
-</head>
-<body>
+
     
 <?php include '../includes/header.php'; ?>
 
@@ -2496,5 +2493,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-</body>
-</html>

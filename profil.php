@@ -308,9 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['profile_photo'])) {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>👤 Mon Profil - Recueil d'Épreuves Universitaires</title>
@@ -1072,8 +1070,7 @@ body {
     pointer-events: none;
 }
 </style>
-</head>
-<body>
+
     <?php include "includes/header.php"; ?>
     
     <!-- Hero Section -->
@@ -2044,5 +2041,3 @@ body {
         transform: translateX(26px);
     }
     </style>
-</body>
-</html>

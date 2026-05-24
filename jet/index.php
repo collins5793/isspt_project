@@ -47,6 +47,20 @@ if ($year_id) {
 }
 
 // =========================
+//  RÉCUPÉRER CONCOURS (AJOUT)
+// =========================
+// =========================
+//  RÉCUPÉRER CONCOURS (CORRIGÉ)
+// =========================
+$concours = [];
+if ($year_id) {
+    // On retire le ORDER BY problématique pour que la page charge
+    $stmt = $pdo->prepare("SELECT * FROM concours WHERE academic_year_id = :id");
+    $stmt->execute(["id" => $year_id]);
+    $concours = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// =========================
 //  PRÉSIDENT DU COMITÉ
 // =========================
 $president = null;
@@ -96,6 +110,11 @@ if ($year_id) {
     $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM activites WHERE academic_year_id = :id");
     $stmt->execute(["id" => $year_id]);
     $stats['activities'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+
+    // Nombre de concours (AJOUT)
+    $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM concours WHERE academic_year_id = :id");
+    $stmt->execute(["id" => $year_id]);
+    $stats['concours'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
     
     // Prochain événement
     $stmt = $pdo->prepare("SELECT nom_evenement, event_start FROM evenements WHERE academic_year_id = :id AND is_public = 1 AND event_start > NOW() ORDER BY event_start ASC LIMIT 1");
@@ -106,9 +125,7 @@ if ($year_id) {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
     <meta charset="UTF-8">
     <title>JET – Journée de l'Étudiant Tarsien | ISSPT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1472,10 +1489,50 @@ if ($year_id) {
             background-position: center;
             z-index: -1;
         }
-    </style>
-</head>
 
-<body>
+    /* Grid ultra responsive sans media queries complexes */
+    .contests-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        gap: 30px;
+        padding: 15px;
+    }
+
+    /* Effets de survol fluides pour la carte Premium */
+    .contest-card {
+        background: #141414; 
+        border-radius: var(--radius-md); 
+        overflow: hidden; 
+        border: 1px solid rgba(255, 255, 255, 0.05); 
+        transition: var(--transition); 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between; 
+        position: relative; 
+        box-shadow: var(--shadow-md);
+    }
+
+    .contest-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--gold);
+        box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
+    }
+
+    /* Ajustement responsive global */
+    @media (max-width: 768px) {
+        .contests-section {
+            padding: 60px 0 !important;
+        }
+        .section-title {
+            font-size: 2rem !important;
+        }
+        .contests-grid {
+            gap: 20px;
+            padding: 0;
+        }
+    }
+</style>
+
         <?php include "../includes/header.php"; ?>
 
     <!-- ============================
@@ -1597,6 +1654,142 @@ if ($year_id) {
             </div>
         </div>
     </section>
+
+
+<!-- ==========================================
+     SECTION : CONCOURS (VERSION COMPLÈTE & CORRIGÉE)
+     ========================================== -->
+<section class="contests-section" id="contests" style="background: var(--primary-dark); padding: 100px 0; position: relative; overflow: hidden;">
+    
+    <!-- Effet de lueur diffuse en arrière-plan (Premium Aura) -->
+    <div style="position: absolute; top: -10%; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: rgba(255, 215, 0, 0.03); filter: blur(150px); pointer-events: none; border-radius: 50%;"></div>
+    
+    <div class="container" style="position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        
+        <!-- En-tête de la section -->
+        <div class="section-header" style="text-align: center; margin-bottom: 60px;">
+            <span style="color: var(--gold); text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; font-weight: 700; display: block; margin-bottom: 10px;">Compétitions & Défis</span>
+            <h2 class="section-title" style="color: var(--light); font-size: 2.8rem; font-family: 'Montserrat', sans-serif; font-weight: 800; margin-bottom: 20px; letter-spacing: -0.5px;">
+                🏆 Les Concours de la JET
+            </h2>
+            <div style="width: 60px; height: 4px; background: var(--accent); margin: 0 auto 20px auto; border-radius: 2px;"></div>
+            <p class="section-subtitle" style="color: var(--dark-gray); max-width: 650px; margin: 0 auto; font-size: 1.1rem; line-height: 1.6;">
+                Exprimez votre talent, défendez les couleurs de votre filière, relevez des défis uniques et gravez votre nom dans l'histoire de cette édition !
+            </p>
+        </div>
+
+        <!-- Condition d'affichage : Pas de concours -->
+        <?php if(empty($concours) || count($concours) == 0): ?>
+            <div class="no-events" style="text-align: center; padding: 60px 20px; background: #131313; border-radius: var(--radius-md); border: 1px dashed rgba(255,255,255,0.1); max-width: 500px; margin: 0 auto;">
+                <div style="width: 80px; height: 80px; background: var(--glass-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="fas fa-trophy" style="font-size: 2.5rem; color: var(--dark-gray);"></i>
+                </div>
+                <h3 style="color: var(--light); font-family: 'Poppins', sans-serif; font-size: 1.3rem; margin-bottom: 10px; font-weight: 600;">Aucun concours ouvert</h3>
+                <p style="color: var(--dark-gray); font-size: 0.95rem; line-height: 1.5;">Les inscriptions pour les compétitions de cette année académique ne sont pas encore lancées. Restez connectés !</p>
+            </div>
+        <?php else: ?>
+            
+            <!-- Grille des concours -->
+            <div class="contests-grid">
+                <?php foreach ($concours as $index => $c): 
+                    // Gestion intelligente de la date de clôture
+                    $deadline_ts = !empty($c['date_limite_inscription']) ? strtotime($c['date_limite_inscription']) : null;
+                    $is_closed = ($deadline_ts && $deadline_ts < time()) || ($c['statut'] === 'termine');
+
+                    // Image de couverture dynamique ou fallback par défaut
+                    $image_cover = !empty($c['image_affiche']) ? '../admins/uploads/' . $c['image_affiche'] : '../assets/images/default-contest.jpg';
+
+                    // Attribution de l'icône FontAwesome selon l'ENUM de ta BDD
+                    $icon_type = 'fa-star';
+                    switch($c['type_concours']) {
+                        case 'academique': $icon_type = 'fa-graduation-cap'; break;
+                        case 'football':   $icon_type = 'fa-futbol'; break;
+                        case 'danse':      $icon_type = 'fa-shoe-prints'; break;
+                        case 'musique':    $icon_type = 'fa-music'; break;
+                    }
+                ?>
+                    
+                    <!-- Carte Concours Unique -->
+                    <div class="contest-card" style="animation-delay: <?= $index * 0.1 ?>s;">
+                        
+                        <!-- Header de la carte : Image d'affiche propre avec dégradé intégré -->
+                        <div style="position: relative; height: 180px; background: url('<?= $image_cover ?>') center/cover no-repeat; display: flex; flex-direction: column; justify-content: space-between; padding: 20px;">
+                            <!-- Overlay noir dégradé pour faire ressortir les badges et l'image proprement -->
+                            <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(20,20,20,1) 100%); z-index: 1;"></div>
+                            
+                            <!-- Ligne supérieure des badges -->
+                            <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <!-- Statut d'inscription -->
+                                <span style="padding: 6px 14px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: <?= $is_closed ? '#262626' : 'rgba(186, 40, 30, 0.2)' ?>; color: <?= $is_closed ? '#999' : '#e63946' ?>; border: 1px solid <?= $is_closed ? '#333' : 'rgba(186, 40, 30, 0.4)' ?>; backdrop-filter: blur(4px); display: inline-flex; align-items: center; gap: 5px;">
+                                    <i class="fas <?= $is_closed ? 'fa-lock' : 'fa-unlock-alt' ?>"></i>
+                                    <?= $is_closed ? 'Clôturé' : 'Ouvert' ?>
+                                </span>
+                                
+                                <!-- Icône de Catégorie -->
+                                <div style="width: 36px; height: 36px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gold); backdrop-filter: blur(4px);" title="Catégorie : <?= ucfirst($c['type_concours']) ?>">
+                                    <i class="fas <?= $icon_type ?>" style="font-size: 0.95rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Corps de la carte -->
+                        <div class="contest-body" style="padding: 0 25px 20px 25px; position: relative; z-index: 2; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; background: #141414;">
+                            <div>
+                                <h3 style="color: var(--light); font-size: 1.35rem; font-family: 'Poppins', sans-serif; font-weight: 700; margin-bottom: 12px; line-height: 1.4;">
+                                    <?= htmlspecialchars($c['nom_concours']) ?>
+                                </h3>
+
+                                <p style="color: var(--light-gray); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; height: 68px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                                    <?= !empty($c['description']) ? htmlspecialchars(strip_tags($c['description'])) : "Aucune description fournie pour ce concours. Cliquez sur Détails pour plus d'informations." ?>
+                                </p>
+                            </div>
+
+                            <!-- Méta-informations (Lieu, Prix, Date limite) -->
+                            <div class="contest-meta" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px;">
+                                <?php if($deadline_ts): ?>
+                                    <div style="color: var(--dark-gray); font-size: 0.85rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-calendar-alt" style="color: var(--gold); width: 14px;"></i>
+                                        <span>Fin Inscr. : <strong style="color: var(--light);"><?= date("d M Y à H:i", $deadline_ts) ?></strong></span>
+                                    </div>
+                                <?php endif; ?>
+
+                                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                    <!-- Badge de Localisation -->
+                                    <?php if(!empty($c['lieu'])): ?>
+                                        <span style="font-size: 0.8rem; color: var(--light-gray); background: rgba(255,255,255,0.04); padding: 5px 10px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.08);">
+                                            <i class="fas fa-map-marker-alt" style="color: var(--accent-light);"></i> <?= htmlspecialchars($c['lieu']) ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <!-- Badge de Tarification -->
+                                    <span style="font-size: 0.8rem; color: var(--light-gray); background: rgba(255,255,255,0.04); padding: 5px 10px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <i class="fas fa-ticket-alt" style="color: #00bcd4;"></i> 
+                                        <?= ($c['participation_gratuite'] == 1 || floatval($c['frais_participation']) == 0) ? '<strong style="color: #2ecc71;">Gratuit</strong>' : '<strong style="color: var(--gold-light);">'.number_format($c['frais_participation'], 0, '.', ' ').' FCFA</strong>' ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pied de la carte (Actions) -->
+                        <div class="contest-footer" style="padding: 15px 25px 25px 25px; background: #141414; display: flex; gap: 12px;">
+                            <a href="details_concours.php?id=<?= $c['id_concours'] ?>" style="flex: 1; text-align: center; padding: 11px; font-size: 0.9rem; font-family: 'Poppins', sans-serif; font-weight: 500; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--light); transition: var(--transition);">
+                                <i class="fas fa-info-circle" style="opacity: 0.8;"></i> Détails
+                            </a>
+                            
+                            <!-- <?php if(!$is_closed): ?>
+                                <a href="participer_concours.php?id=<?= $c['id_concours'] ?>" style="flex: 1; text-align: center; padding: 11px; font-size: 0.9rem; font-family: 'Poppins', sans-serif; font-weight: 600; border-radius: var(--radius-sm); display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background: var(--gold); color: #000; transition: var(--transition); box-shadow: 0 4px 12px rgba(255,215,0,0.2);" onmouseover="this.style.background='var(--gold-light)'; this.style.transform='scale(1.02)'" onmouseout="this.style.background='var(--gold)'; this.style.transform='scale(1)'">
+                                    <i class="fas fa-edit"></i> Rejoindre
+                                </a>
+                            <?php endif; ?> -->
+                        </div>
+
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        
+    </div>
+</section>
 
     <!-- ============================
          ÉVÉNEMENTS
@@ -2180,5 +2373,3 @@ if ($year_id) {
         <div class="preloader-spinner"></div>
     </div>
     -->
-</body>
-</html>
