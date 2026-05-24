@@ -117,9 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_question'])) {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>❓ FAQ - Institut Supérieur Saint Paul Tarse</title>
@@ -871,8 +869,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_question'])) {
         animation: rotate 1s ease-in-out infinite;
     }
     </style>
-</head>
-<body>
+
     <?php include "includes/header.php"; ?>
     
     <!-- Hero Section -->
@@ -1390,5 +1387,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_question'])) {
         setTimeout(() => openQuestion(questionId), 500);
     }
     </script>
-</body>
-</html>

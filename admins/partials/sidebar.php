@@ -40,17 +40,14 @@ $stats = [
 ];
 ?>
 
-<!DOCTYPE html>
-<html lang="fr" data-theme="dark">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="description" content="Panel d'administration ISSPT">
     <link rel="stylesheet" href="<?= ASSETS_URL ?>css/sidebar.css">
     <link rel="stylesheet" href="<?= ASSETS_URL ?>css/main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+
     <!-- Sidebar Container -->
     <div class="sidebar-container" role="navigation" aria-label="Menu principal">
         <!-- Mobile Toggle -->
@@ -203,9 +200,13 @@ $stats = [
                         'submenu' => [
                             ['icon' => 'fas fa-calendar', 'label' => 'Événements', 'link' => 'evenement/evenements.php'],
                             ['icon' => 'fas fa-ticket-alt', 'label' => 'Billeterie', 'link' => 'tickets.php'],
+                            ['icon' => 'fas fa-code-branch', 'label' => 'Inscrit externe', 'link' => 'evenement/liste_codes.php'],
                             ['icon' => 'fas fa-football-ball', 'label' => 'Activités & Clubs', 'link' => 'evenement/activites.php'],
+                            ['icon' => 'fas fa-ticket', 'label' => 'Templates de tickets', 'link' => 'evenement/liste_templates.php'],
+                            ['icon' => 'fas fa-cogs', 'label' => 'Configurations de tickets', 'link' => 'evenement/liste_layouts.php'],
+                            ['icon' => 'fas fa-image', 'label' => 'Concours', 'link' => 'concour/concours.php']
                         ],
-                        'active' => str_contains($currentDir, 'evenement') || in_array($currentPage, ['tickets.php', 'galerie.php'])
+                        'active' => str_contains($currentDir, 'evenement') || in_array($currentPage, ['tickets.php', 'galerie.php', 'evenement/liste_templates.php'])
                     ],
                     'football' => [
                         'icon' => 'fas fa-futbol',
@@ -217,27 +218,13 @@ $stats = [
                         ],
                         'active' => str_contains($currentDir, 'football')
                     ],
-                    'modules' => [
-                        'icon' => 'fas fa-puzzle-piece',
-                        'label' => 'Modules & Services',
-                        'submenu' => [
-                            ['icon' => 'fas fa-comments', 'label' => 'Messagerie', 'link' => 'messagerie.php'],
-                            ['icon' => 'fas fa-folder-open', 'label' => 'Documents', 'link' => 'documents.php'],
-                            ['icon' => 'fas fa-bell', 'label' => 'Notifications', 'link' => 'notifications.php'],
-                            ['icon' => 'fas fa-clipboard-list', 'label' => 'Logs système', 'link' => 'logs.php']
-                        ],
-                        'active' => in_array($currentPage, ['messagerie.php', 'documents.php', 'notifications.php', 'logs.php'])
-                    ],
                     'parametres' => [
                         'icon' => 'fas fa-cogs',
                         'label' => 'Paramètres',
                         'submenu' => [
-                            ['icon' => 'fas fa-user-cog', 'label' => 'Profil', 'link' => 'profile.php'],
-                            ['icon' => 'fas fa-sliders-h', 'label' => 'Configuration', 'link' => 'parametres.php'],
-                            ['icon' => 'fas fa-palette', 'label' => 'Thème & Apparence', 'link' => 'themes.php'],
-                            ['icon' => 'fas fa-shield-alt', 'label' => 'Sécurité', 'link' => 'securite.php']
+                            ['icon' => 'fas fa-user-cog', 'label' => 'Profil', 'link' => 'parametres.php']
                         ],
-                        'active' => in_array($currentPage, ['profile.php', 'parametres.php', 'themes.php', 'securite.php'])
+                        'active' => in_array($currentPage, ['parametres.php'])
                     ]
                 ];
                 
@@ -305,5 +292,3 @@ $stats = [
     <!-- Scripts -->
     <script src="<?= ASSETS_URL ?>js/utils.js"></script>
     <script src="<?= ASSETS_URL ?>js/sidebar.js"></script>
-</body>
-</html>

@@ -2,13 +2,12 @@
 session_start();
 require_once '../../includes/db.php';
 
-// Vérifier si l’admin est connecté
+// Vérification de sécurité
 if (!isset($_SESSION['admin_id'])) {
     header('Location: connexion_admin.php');
     exit();
 }
 
-// Vérifier que l'id est fourni
 if (!isset($_GET['id'])) {
     header('Location: bureau.php');
     exit();
@@ -37,32 +36,22 @@ if (!$member) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $poste_bureau = $_POST['poste_bureau'] ?? null;
 
-    // Vérifier si le poste existe déjà pour un autre membre
     if (!empty($poste_bureau)) {
-        $check = $pdo->prepare("
-            SELECT * FROM administrateurs 
-            WHERE role = 'bureau' AND poste_bureau = ? AND id_admin != ?
-        ");
+        $check = $pdo->prepare("SELECT * FROM administrateurs WHERE role = 'bureau' AND poste_bureau = ? AND id_admin != ?");
         $check->execute([$poste_bureau, $id_admin]);
-
         if ($check->rowCount() > 0) {
-            $message = "<div class='alert alert-warning'>Ce rôle est déjà attribué à un autre membre.</div>";
+            $message = "<div class='alert-msg error'>⚠️ Ce rôle est déjà attribué à un autre membre.</div>";
         }
     }
 
-    // Si pas de problème, mise à jour
     if (empty($message)) {
-        $update = $pdo->prepare("
-            UPDATE administrateurs 
-            SET poste_bureau = ? 
-            WHERE id_admin = ?
-        ");
+        $update = $pdo->prepare("UPDATE administrateurs SET poste_bureau = ? WHERE id_admin = ?");
         if ($update->execute([$poste_bureau, $id_admin])) {
-            $_SESSION['message'] = "<div class='alert alert-success'>Membre du bureau modifié avec succès.</div>";
+            $_SESSION['message'] = "<div class='alert-msg success'>✅ Membre modifié avec succès.</div>";
             header('Location: bureau.php');
             exit();
         } else {
-            $message = "<div class='alert alert-danger'>Erreur lors de la mise à jour du membre.</div>";
+            $message = "<div class='alert-msg error'>❌ Erreur lors de la mise à jour.</div>";
         }
     }
 }
@@ -70,22 +59,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ob_start();
 ?>
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
-    <h1>Modifier un membre du bureau</h1>
-    <a href="bureau.php" class="btn btn-secondary">⬅ Retour à la liste</a>
-</div>
+<style>
+    /* Conteneur principal */
+    .admin-container {
+        max-width: 500px;
+        margin: var(--space-6) auto;
+        padding: 0 var(--space-4);
+    }
 
-<?= $message ?>
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-5);
+    }
 
-<div class="card">
-    <div class="card-header">
-        <h3>Étudiant : <?= htmlspecialchars($member['nom'] . ' ' . $member['prenom']) ?></h3>
+    .header-section h1 {
+        font-size: var(--font-size-lg);
+        color: var(--white);
+    }
+
+    /* Style de la Carte */
+    .form-card {
+        background: var(--primary-800);
+        padding: var(--space-5);
+        border-radius: var(--radius-lg);
+        border: var(--sidebar-border);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-title {
+        color: var(--white);
+        margin-bottom: var(--space-4);
+        font-size: var(--font-size-md);
+        border-bottom: 1px solid var(--primary-700);
+        padding-bottom: var(--space-3);
+    }
+
+    /* Inputs & Select */
+    .form-group { margin-bottom: var(--space-4); }
+    label { display: block; margin-bottom: var(--space-2); color: var(--gray-300); font-size: var(--font-size-sm); }
+    
+    select {
+        width: 100%;
+        padding: 12px;
+        background: var(--primary-900);
+        border: 1px solid var(--primary-700);
+        border-radius: var(--radius-md);
+        color: var(--white);
+        font-size: var(--font-size-md);
+        cursor: pointer;
+        transition: var(--transition-base);
+    }
+
+    select:focus { border-color: var(--accent-blue); outline: none; }
+
+    /* Boutons */
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        background: var(--accent-blue);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-base);
+        margin-top: var(--space-2);
+    }
+
+    .btn-submit:hover { background: var(--primary-600); }
+    .btn-back { color: var(--gray-400); text-decoration: none; font-size: var(--font-size-sm); transition: var(--transition-fast); }
+    .btn-back:hover { color: var(--white); }
+
+    /* Alertes */
+    .alert-msg { padding: 12px; border-radius: var(--radius-md); margin-bottom: var(--space-4); font-size: var(--font-size-sm); }
+    .error { background: rgba(255, 71, 87, 0.1); color: var(--accent-red); border: 1px solid var(--accent-red); }
+    .success { background: rgba(16, 172, 132, 0.1); color: var(--accent-green); border: 1px solid var(--accent-green); }
+
+    /* Responsivité */
+    @media (max-width: 480px) {
+        .admin-container { margin: var(--space-3) auto; }
+        .form-card { padding: var(--space-4); }
+    }
+</style>
+
+<div class="admin-container">
+    <div class="header-section">
+        <h1>Modifier le membre</h1>
+        <a href="bureau.php" class="btn-back">⬅ Retour</a>
     </div>
-    <div class="card-body">
+
+    <?= $message ?>
+
+    <div class="form-card">
+        <h3 class="card-title"><?= htmlspecialchars($member['nom'] . ' ' . $member['prenom']) ?></h3>
+        
         <form method="POST">
-            <div class="form-group mb-3">
+            <div class="form-group">
                 <label>Rôle dans le bureau :</label>
-                <select name="poste_bureau" class="form-control">
+                <select name="poste_bureau">
                     <option value="" <?= empty($member['poste_bureau']) ? 'selected' : '' ?>>Membre</option>
                     <option value="président" <?= ($member['poste_bureau'] == 'président') ? 'selected' : '' ?>>Président</option>
                     <option value="vice-président" <?= ($member['poste_bureau'] == 'vice-président') ? 'selected' : '' ?>>Vice-président</option>
@@ -95,7 +168,7 @@ ob_start();
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Modifier le membre</button>
+            <button type="submit" class="btn-submit">Mettre à jour le membre</button>
         </form>
     </div>
 </div>

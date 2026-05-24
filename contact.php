@@ -65,9 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📧 Contactez-nous - Recueil d'Épreuves Universitaires</title>
@@ -645,8 +643,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         to { transform: rotate(360deg); }
     }
     </style>
-</head>
-<body>
+
     <?php include "includes/header.php"; ?>
     
     <!-- Hero Section -->
@@ -1077,5 +1074,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         });
     }
     </script>
-</body>
-</html>

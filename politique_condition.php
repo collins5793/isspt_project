@@ -17,9 +17,7 @@ $isAdmin = isset($_SESSION['admin_id']);
 $last_updated = date('d/m/Y', strtotime('-1 month'));
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📜 Politique & Conditions - Institut Supérieur Saint Paul Tarse</title>
@@ -761,8 +759,7 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
         }
     }
     </style>
-</head>
-<body>
+
     <?php include "includes/header.php"; ?>
     
     <!-- Hero Section -->
@@ -1384,5 +1381,3 @@ $last_updated = date('d/m/Y', strtotime('-1 month'));
         alert('La fonction d\'export PDF sera bientôt disponible. En attendant, vous pouvez utiliser la fonction d\'impression de votre navigateur.');
     }
     </script>
-</body>
-</html>

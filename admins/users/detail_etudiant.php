@@ -90,94 +90,121 @@ $footComments = $footCommentsStmt->fetchAll(PDO::FETCH_ASSOC);
 ob_start();
 ?>
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
-    <h1>Détail de l'étudiant : <?= htmlspecialchars($etudiant['nom'] . ' ' . $etudiant['prenom']) ?></h1>
-    <a href="liste_etudiants.php" class="btn btn-secondary">⬅ Retour à la liste</a>
-</div>
+<style>
+    :root {
+        /* Intégration de vos variables */
+        --primary-900: #080020; --primary-800: #0a0127; --primary-700: #120c3a;
+        --primary-600: #1a1849; --accent-blue: #2e86de; --accent-green: #10ac84;
+        --white: #ffffff; --gray-100: #f1f2f6; --gray-300: #ced6e0; --gray-400: #a4b0be;
+        --radius-lg: 12px;
+    }
 
-<div class="row mb-4">
-    <div class="col-md-4 text-center">
-        <img src="<?= (!empty($etudiant['photo']) && file_exists('../uploads/photos_etudiants/'.$etudiant['photo'])) ? '../uploads/photos_etudiants/'.$etudiant['photo'] : '../assets/default/avatar.png' ?>" 
-             class="img-fluid rounded mb-3" alt="Photo de <?= htmlspecialchars($etudiant['nom']) ?>">
-        <ul class="list-group text-start">
-            <li class="list-group-item"><strong>Matricule :</strong> <?= htmlspecialchars($etudiant['matricule']) ?></li>
-            <li class="list-group-item"><strong>Email :</strong> <?= htmlspecialchars($etudiant['email']) ?></li>
-            <li class="list-group-item"><strong>Téléphone :</strong> <?= htmlspecialchars($etudiant['telephone']) ?></li>
-            <li class="list-group-item"><strong>Promotion :</strong> <?= htmlspecialchars($etudiant['promotion']) ?></li>
-            <li class="list-group-item"><strong>Filière :</strong> <?= htmlspecialchars($etudiant['filiere']) ?></li>
-            <li class="list-group-item"><strong>Statut :</strong> <?= htmlspecialchars($etudiant['statut']) ?></li>
-            <li class="list-group-item"><strong>Date inscription :</strong> <?= htmlspecialchars($etudiant['date_inscription']) ?></li>
-        </ul>
+    .profile-container { background: var(--primary-900); color: var(--white); min-height: 100vh; }
+    
+    /* Carte Profil Sidebar */
+    .profile-sidebar {
+        background: var(--primary-800);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+        padding: var(--space-4);
+        position: sticky; top: 20px;
+    }
+    .profile-img { width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--primary-700); border-radius: 50%; margin-bottom: 1rem; }
+    
+    /* Sections Content */
+    .info-card {
+        background: var(--primary-800);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: var(--radius-lg);
+        padding: var(--space-4);
+        margin-bottom: var(--space-4);
+    }
+    .section-title { font-size: 1.2rem; font-weight: 600; color: var(--accent-blue); margin-bottom: var(--space-3); display: flex; align-items: center; gap: 10px; }
+    
+    /* Liste stylisée */
+    .data-list { list-style: none; padding: 0; }
+    .data-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
+    .data-item:last-child { border: none; }
+    .badge { padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.8rem; background: var(--primary-600); }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="text-white">Profil Étudiant</h2>
+        <a href="liste_etudiants.php" class="btn btn-outline-light btn-sm">⬅ Retour à la liste</a>
     </div>
 
-    <div class="col-md-8">
-        <!-- Activités -->
-        <h3>Activités</h3>
-        <?php if($activites): ?>
-            <ul class="list-group mb-3">
-                <?php foreach($activites as $act): ?>
-                    <li class="list-group-item">
-                        <strong><?= htmlspecialchars($act['nom_activite']) ?></strong> (<?= htmlspecialchars($act['annee_scolaire']) ?>)<br>
-                        Statut: <?= htmlspecialchars($act['statut']) ?>
-                        <?php if($act['motif_refus']): ?>
-                            <br><em>Motif du refus: <?= htmlspecialchars($act['motif_refus']) ?></em>
-                        <?php endif; ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Aucune activité inscrite.</p>
-        <?php endif; ?>
+    <div class="row">
+        <!-- Colonne Gauche : Infos -->
+        <div class="col-md-4">
+            <div class="profile-sidebar text-center">
+                <img src="<?= (!empty($etudiant['photo']) && file_exists('../uploads/photos_etudiants/'.$etudiant['photo'])) ? '../uploads/photos_etudiants/'.$etudiant['photo'] : '../assets/default/avatar.png' ?>" class="profile-img">
+                <h4 class="mb-1"><?= htmlspecialchars($etudiant['prenom'] . ' ' . $etudiant['nom']) ?></h4>
+                <p class="text-muted"><?= htmlspecialchars($etudiant['filiere']) ?></p>
+                
+                <div class="text-start mt-4">
+                    <p><strong>Matricule:</strong> <span class="text-info"><?= htmlspecialchars($etudiant['matricule']) ?></span></p>
+                    <p><strong>Email:</strong> <?= htmlspecialchars($etudiant['email']) ?></p>
+                    <p><strong>Tel:</strong> <?= htmlspecialchars($etudiant['telephone']) ?></p>
+                    <p><strong>Promotion:</strong> <?= htmlspecialchars($etudiant['promotion']) ?></p>
+                </div>
+            </div>
+        </div>
 
-        <!-- Événements -->
-        <h3>Événements</h3>
-        <?php if($evenements): ?>
-            <ul class="list-group mb-3">
-                <?php foreach($evenements as $ev): ?>
-                    <li class="list-group-item">
-                        <strong><?= htmlspecialchars($ev['nom_evenement']) ?></strong> - <?= htmlspecialchars($ev['type_evenement']) ?><br>
-                        Lieu: <?= htmlspecialchars($ev['lieu']) ?> | Début: <?= htmlspecialchars($ev['event_start']) ?><br>
-                        Participation: <?= htmlspecialchars($ev['participation_statut']) ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Aucun événement participé.</p>
-        <?php endif; ?>
+        <!-- Colonne Droite : Activités & Foot -->
+        <div class="col-md-8">
+            
+            <!-- Activités -->
+            <div class="info-card">
+                <div class="section-title">📂 Activités</div>
+                <?php if($activites): ?>
+                    <div class="data-list">
+                        <?php foreach($activites as $act): ?>
+                            <div class="data-item">
+                                <div><strong><?= htmlspecialchars($act['nom_activite']) ?></strong> <br><small class="text-muted"><?= $act['annee_scolaire'] ?></small></div>
+                                <div><span class="badge"><?= htmlspecialchars($act['statut']) ?></span></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?><p class="text-muted">Aucune activité enregistrée.</p><?php endif; ?>
+            </div>
 
-        <!-- Équipe de foot -->
-        <h3>Équipe de Football</h3>
-        <?php if($teams): ?>
-            <ul class="list-group mb-3">
-                <?php foreach($teams as $team): ?>
-                    <li class="list-group-item">
-                        <strong>Équipe :</strong> <?= htmlspecialchars($team['team_name']) ?> (<?= htmlspecialchars($team['season_label']) ?>)<br>
-                        Coach: <?= htmlspecialchars($team['coach']) ?><br>
-                        Poste: <?= htmlspecialchars($team['position']) ?> | N° maillot: <?= htmlspecialchars($team['shirt_number']) ?><br>
-                        Capitaine: <?= $team['is_captain'] ? 'Oui' : 'Non' ?><br>
-                        Période: <?= $team['joined_at'] ?> - <?= $team['left_at'] ?? 'Présent' ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Non membre d'une équipe de foot.</p>
-        <?php endif; ?>
+            <!-- Événements -->
+            <div class="info-card">
+                <div class="section-title">🎉 Événements</div>
+                <div class="row">
+                    <?php foreach($evenements as $ev): ?>
+                        <div class="col-md-6 mb-2">
+                            <div class="p-3 rounded" style="background:var(--primary-700)">
+                                <strong><?= htmlspecialchars($ev['nom_evenement']) ?></strong><br>
+                                <small><?= htmlspecialchars($ev['event_start']) ?> | <?= htmlspecialchars($ev['lieu']) ?></small>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
 
-        <!-- Commentaires football -->
-        <h3>Commentaires Football</h3>
-        <?php if($footComments): ?>
-            <ul class="list-group mb-3">
-                <?php foreach($footComments as $c): ?>
-                    <li class="list-group-item">
-                        <?= htmlspecialchars($c['message']) ?><br>
-                        Note: <?= htmlspecialchars($c['note'] ?? '-') ?> | Par: <?= htmlspecialchars($c['admin_nom'] ?? 'Étudiant') ?> <?= htmlspecialchars($c['admin_prenom'] ?? '') ?> 
-                        | <?= $c['user_type'] === 'admin' ? 'Admin' : 'Étudiant' ?> | <?= $c['date_commentaire_football'] ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        <?php else: ?>
-            <p>Aucun commentaire football.</p>
-        <?php endif; ?>
+            <!-- Foot -->
+            <div class="info-card">
+                <div class="section-title">⚽ Équipe de Football</div>
+                <?php if($teams): ?>
+                    <table class="table table-dark table-sm table-hover">
+                        <thead><tr><th>Équipe</th><th>Saison</th><th>Poste</th></tr></thead>
+                        <tbody>
+                            <?php foreach($teams as $team): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($team['team_name']) ?></td>
+                                    <td><?= htmlspecialchars($team['season_label']) ?></td>
+                                    <td><?= htmlspecialchars($team['position']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                <?php else: ?><p class="text-muted">Aucune équipe associée.</p><?php endif; ?>
+            </div>
+
+        </div>
     </div>
 </div>
 

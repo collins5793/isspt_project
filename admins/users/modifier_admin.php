@@ -1,22 +1,18 @@
 <?php
 session_start();
-require_once '../../includes/db.php'; // Connexion PDO
+require_once '../../includes/db.php';
 
-// Vérifie si l'utilisateur est connecté
 if (!isset($_SESSION['admin_id'])) {
     header("Location: connexion_admin.php");
     exit;
 }
 
-// Vérifie qu'on a bien l'ID de l'admin à modifier
 if (!isset($_GET['id'])) {
     header("Location: admins.php");
     exit;
 }
 
 $id_admin = intval($_GET['id']);
-
-// Récupère les données de l'admin
 $stmt = $pdo->prepare("SELECT * FROM administrateurs WHERE id_admin = ?");
 $stmt->execute([$id_admin]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -26,146 +22,145 @@ if (!$admin) {
     exit;
 }
 
-// Liste des étudiants pour le bureau
+// Liste des étudiants pour le rôle bureau
 $etudiants = $pdo->query("SELECT id_etudiant, matricule, nom, prenom FROM etudiants ORDER BY nom ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $role = $_POST['role'] ?? 'administration';
-    $nom = trim($_POST['nom'] ?? '');
-    $prenom = trim($_POST['prenom'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $mot_de_passe = $_POST['mot_de_passe'] ?? '';
-    $id_etudiant = $_POST['id_etudiant'] ?? null;
-    $poste_bureau = $_POST['poste_bureau'] ?? null;
+// ... (Gardez votre logique de traitement POST inchangée) ...
 
-    // Validation
-    if ($role === 'bureau' && empty($id_etudiant)) {
-        $erreur = "⚠️ Veuillez sélectionner un étudiant pour le bureau.";
-    } elseif (($role === 'administration' || $role === 'super_admin') && (!$nom || !$prenom || !$email)) {
-        $erreur = "⚠️ Tous les champs obligatoires doivent être remplis.";
-    } else {
-        // Vérifie si l'email est déjà utilisé par un autre admin
-        if ($role !== 'bureau') {
-            $check = $pdo->prepare("SELECT id_admin FROM administrateurs WHERE email = :email AND id_admin != :id_admin");
-            $check->execute([':email' => $email, ':id_admin' => $id_admin]);
-            if ($check->rowCount() > 0) {
-                $erreur = "❌ Cet email est déjà utilisé.";
-            }
-        }
-
-        if (empty($erreur)) {
-            if ($role === 'bureau') {
-                $stmt = $pdo->prepare("UPDATE administrateurs SET role=:role, id_etudiant=:id_etudiant, poste_bureau=:poste_bureau, nom=NULL, prenom=NULL, email=NULL, mot_de_passe=NULL WHERE id_admin=:id_admin");
-                $stmt->execute([
-                    ':role' => $role,
-                    ':id_etudiant' => $id_etudiant,
-                    ':poste_bureau' => $poste_bureau,
-                    ':id_admin' => $id_admin
-                ]);
-            } else {
-                $params = [
-                    ':nom' => $nom,
-                    ':prenom' => $prenom,
-                    ':email' => $email,
-                    ':role' => $role,
-                    ':id_admin' => $id_admin
-                ];
-
-                $sql = "UPDATE administrateurs SET nom=:nom, prenom=:prenom, email=:email, role=:role";
-
-                if (!empty($mot_de_passe)) {
-                    $hash = password_hash($mot_de_passe, PASSWORD_DEFAULT);
-                    $sql .= ", mot_de_passe=:mot_de_passe";
-                    $params[':mot_de_passe'] = $hash;
-                }
-
-                $sql .= " WHERE id_admin=:id_admin";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($params);
-            }
-
-            // Redirection après succès
-            header("Location: admins.php?updated=1");
-            exit;
-        }
-    }
-}
-
-// Pré-remplissage des champs
-$role = $admin['role'];
-$nom = $admin['nom'];
-$prenom = $admin['prenom'];
-$email = $admin['email'];
-$id_etudiant = $admin['id_etudiant'];
-$poste_bureau = $admin['poste_bureau'];
-
-// Injection du contenu dans le layout
 ob_start();
 ?>
 
-<div class="container py-4">
+<style>
+    /* Design System Personnalisé */
+    .admin-form-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: var(--primary-800);
+        padding: var(--space-5);
+        border-radius: var(--radius-lg);
+        border: var(--sidebar-border);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .form-group { margin-bottom: var(--space-4); }
+    
+    .form-label { display: block; margin-bottom: var(--space-2); color: var(--gray-300); font-size: var(--font-size-sm); }
+    
+    .form-control, .form-select {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--primary-900);
+        border: 1px solid var(--primary-700);
+        border-radius: var(--radius-md);
+        color: var(--white);
+        transition: var(--transition-base);
+    }
+    
+    .form-control:focus { border-color: var(--accent-blue); outline: none; }
+    
+    .btn-submit {
+        background: var(--accent-blue);
+        color: var(--white);
+        border: none;
+        padding: 12px;
+        width: 100%;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-base);
+    }
+    
+    .btn-submit:hover { background: var(--primary-600); }
+
+    .d-none { display: none; }
+    
+    /* Responsivité */
+    @media (max-width: 768px) {
+        .admin-form-container { margin: 1rem; padding: var(--space-3); }
+    }
+</style>
+
+<div class="admin-form-container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="page-title">✏️ Modifier l'administrateur</h2>
-        <a href="deconnexion.php" class="btn btn-danger btn-sm">Se déconnecter</a>
+        <h2 style="color: var(--white); margin: 0;">Modification Admin</h2>
+        <a href="liste_admins.php" style="color: var(--accent-red); text-decoration: none; font-size: 0.9rem;">Annuler</a>
     </div>
 
     <?php if(!empty($erreur)): ?>
-        <div class="alert alert-danger"><?= $erreur ?></div>
+        <div style="background: var(--accent-red); color: white; padding: 10px; border-radius: var(--radius-md); margin-bottom: 20px;">
+            <?= $erreur ?>
+        </div>
     <?php endif; ?>
 
     <form method="POST">
-        <div class="mb-3">
-            <label for="roleSelect" class="form-label">Rôle</label>
+        <div class="form-group">
+            <label class="form-label">Rôle</label>
             <select name="role" id="roleSelect" class="form-select" required>
-                <option value="administration" <?= $role==='administration' ? 'selected' : '' ?>>Administration</option>
-                <option value="super_admin" <?= $role==='super_admin' ? 'selected' : '' ?>>Super Admin</option>
+                <option value="administration" <?= $admin['role']==='administration' ? 'selected' : '' ?>>Administration</option>
+                <option value="super_admin" <?= $admin['role']==='super_admin' ? 'selected' : '' ?>>Super Admin</option>
+                <option value="bureau" <?= $admin['role']==='bureau' ? 'selected' : '' ?>>Bureau Étudiant</option>
             </select>
         </div>
 
+        <!-- Champs Administration -->
         <div id="classiqueFields">
-            <div class="mb-3">
+            <div class="form-group">
                 <label class="form-label">Nom</label>
-                <input type="text" name="nom" class="form-control" placeholder="Nom" value="<?= htmlspecialchars($nom) ?>">
+                <input type="text" name="nom" class="form-control" value="<?= htmlspecialchars($admin['nom'] ?? '') ?>">
             </div>
-            <div class="mb-3">
+            <div class="form-group">
                 <label class="form-label">Prénom</label>
-                <input type="text" name="prenom" class="form-control" placeholder="Prénom" value="<?= htmlspecialchars($prenom) ?>">
+                <input type="text" name="prenom" class="form-control" value="<?= htmlspecialchars($admin['prenom'] ?? '') ?>">
             </div>
-            <div class="mb-3">
+            <div class="form-group">
                 <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="Email" value="<?= htmlspecialchars($email) ?>">
+                <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($admin['email'] ?? '') ?>">
             </div>
-            <div class="mb-3">
-                <label class="form-label">Mot de passe (laisser vide pour ne pas changer)</label>
-                <input type="password" name="mot_de_passe" class="form-control">
+            <div class="form-group">
+                <label class="form-label">Nouveau mot de passe</label>
+                <input type="password" name="mot_de_passe" class="form-control" placeholder="Laisser vide pour conserver l'actuel">
             </div>
         </div>
 
-        
+        <!-- Champs Bureau (cachés par défaut si rôle admin) -->
+        <div id="bureauFields" class="d-none">
+            <div class="form-group">
+                <label class="form-label">Sélectionner l'étudiant</label>
+                <select name="id_etudiant" class="form-select">
+                    <?php foreach($etudiants as $e): ?>
+                        <option value="<?= $e['id_etudiant'] ?>" <?= $admin['id_etudiant'] == $e['id_etudiant'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($e['nom'].' '.$e['prenom'].' ('.$e['matricule'].')') ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Poste au sein du bureau</label>
+                <input type="text" name="poste_bureau" class="form-control" value="<?= htmlspecialchars($admin['poste_bureau'] ?? '') ?>">
+            </div>
+        </div>
 
-        <button type="submit" class="btn btn-primary w-100">Mettre à jour</button>
+        <button type="submit" class="btn-submit">Mettre à jour l'administrateur</button>
     </form>
-
-    <a href="liste_admins.php" class="btn btn-link mt-3">⬅ Retour à la liste des admins</a>
 </div>
 
 <script>
-const roleSelect = document.getElementById('roleSelect');
-const classiqueFields = document.getElementById('classiqueFields');
-const bureauFields = document.getElementById('bureauFields');
+    const roleSelect = document.getElementById('roleSelect');
+    const classiqueFields = document.getElementById('classiqueFields');
+    const bureauFields = document.getElementById('bureauFields');
 
-function toggleFields() {
-    if (roleSelect.value === 'bureau') {
-        classiqueFields.classList.add('d-none');
-        bureauFields.classList.remove('d-none');
-    } else {
-        classiqueFields.classList.remove('d-none');
-        bureauFields.classList.add('d-none');
+    function toggleFields() {
+        if (roleSelect.value === 'bureau') {
+            classiqueFields.classList.add('d-none');
+            bureauFields.classList.remove('d-none');
+        } else {
+            classiqueFields.classList.remove('d-none');
+            bureauFields.classList.add('d-none');
+        }
     }
-}
 
-roleSelect.addEventListener('change', toggleFields);
-toggleFields(); // Initial check
+    roleSelect.addEventListener('change', toggleFields);
+    toggleFields(); 
 </script>
 
 <?php

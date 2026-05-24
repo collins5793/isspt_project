@@ -1,9 +1,10 @@
 <?php
 session_start();
 require_once '../includes/db.php'; // connexion PDO
-use Spatie\PdfToImage\Pdf;
+
 define('BASE_URL', '/isspt_projet/'); // chemin relatif depuis localhost
 $base_url = BASE_URL;
+
 // Initialisation des variables
 $isLogged = false;
 $isAdmin = false;
@@ -71,16 +72,13 @@ $stmt->execute($params);
 $epreuves = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Recueil d'Épreuves Universitaires</title>
-<link rel="stylesheet" href="assets/css/index.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Recueil d'Épreuves Universitaires</title>
+    <link rel="stylesheet" href="assets/css/index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
 /* ==========================================================================
    THEME PREMIUM - RECUEIL D'ÉPREUVES UNIVERSITAIRES
    Design moderne avec animations élégantes
@@ -728,8 +726,7 @@ body {
     transform: translateY(0);
 }
 </style>
-</head>
-<body>
+
     <?php include "../includes/header.php"; ?>
 
 <!-- Hero Section -->
@@ -839,6 +836,7 @@ body {
                 if(!file_exists($thumbPath)) $thumbPath = '../admins/epreuve/uploads/thumbs/pdf-icon.jpg';
             ?>
             <div class="epreuve-card scroll-animate"
+                data-id="<?= intval($row['id_epreuve']) ?>"
                 data-titre="<?= htmlspecialchars($row['titre']) ?>"
                 data-filiere="<?= htmlspecialchars($row['nom_filiere']) ?>"
                 data-annee="<?= htmlspecialchars($row['annee_univ']) ?>"
@@ -896,8 +894,9 @@ body {
                         <a href="#" class="btn-view open-modal">
                             <i class="fas fa-eye"></i> Voir détails
                         </a>
-                        <a id="modal-download" class="btn-download" href="#" download>
-                            <i class="fas fa-download"></i> Télécharger le PDF
+                        <!-- Routage propre vers download.php avec l'identifiant unique -->
+                        <a class="btn-download" href="download.php?id=<?= $row['id_epreuve'] ?>">
+                            <i class="fas fa-download"></i> Télécharger
                         </a>
                     </div>
                 </div>
@@ -947,7 +946,8 @@ body {
             <p id="modal-description"></p>
         </div>
         
-        <a id="modal-download" class="btn-modal-download" href="#" download>
+        <!-- Le bouton de la modal est lui aussi synchronisé en JS vers download.php -->
+        <a id="modal-download-btn" class="btn-modal-download" href="#">
             <i class="fas fa-download"></i> Télécharger le PDF
         </a>
     </div>
@@ -956,22 +956,20 @@ body {
 <?php include "../includes/footer.php"; ?>
 
 <script>
-// Animation au scroll
+// Animation au scroll via IntersectionObserver
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
             entry.target.classList.add('visible');
         }
     });
-}, {
-    threshold: 0.1
-});
+}, { threshold: 0.1 });
 
 document.querySelectorAll('.scroll-animate').forEach((el) => {
     observer.observe(el);
 });
 
-// Modal functionality
+// Gestion fine de la fenêtre Modale
 document.querySelectorAll('.open-modal').forEach(button => {
     button.addEventListener('click', (e) => {
         e.preventDefault();
@@ -983,17 +981,16 @@ document.querySelectorAll('.open-modal').forEach(button => {
         document.getElementById('modal-type').textContent = card.dataset.type;
         document.getElementById('modal-niveau').textContent = card.dataset.niveau;
         document.getElementById('modal-description').textContent = card.dataset.description || 'Aucune description disponible';
-        document.getElementById('modal-download').href = '../admins/epreuve/uploads/' + card.dataset.file;
         
-        // Mettre à jour le sous-titre
-        document.getElementById('modal-subtitle').textContent = 
-            `${card.dataset.filiere} • ${card.dataset.annee}`;
+        // Routage dynamique du bouton de téléchargement de la modal vers le script de log
+        document.getElementById('modal-download-btn').href = 'download.php?id=' + card.dataset.id;
         
+        document.getElementById('modal-subtitle').textContent = `${card.dataset.filiere} • ${card.dataset.annee}`;
         document.getElementById('modal-overlay').style.display = 'flex';
     });
 });
 
-// Close modal
+// Fermeture de la modal
 document.getElementById('modal-close').addEventListener('click', () => {
     document.getElementById('modal-overlay').style.display = 'none';
 });
@@ -1004,35 +1001,32 @@ document.getElementById('modal-overlay').addEventListener('click', (e) => {
     }
 });
 
-// Effet de recherche en direct sur les cartes
+// Recherche dynamique temps réel (Filtre visuel côté client)
 const searchInput = document.querySelector('input[name="search"]');
 const cards = document.querySelectorAll('.epreuve-card');
 
-searchInput.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    
-    cards.forEach(card => {
-        const title = card.querySelector('.card-title').textContent.toLowerCase();
-        const filiere = card.querySelector('.filiere-tag').textContent.toLowerCase();
-        const type = card.dataset.type.toLowerCase();
+if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
         
-        const matches = title.includes(searchTerm) || 
-                       filiere.includes(searchTerm) || 
-                       type.includes(searchTerm);
-        
-        card.style.display = matches ? 'block' : 'none';
+        cards.forEach(card => {
+            const title = card.querySelector('.card-title').textContent.toLowerCase();
+            const filiere = card.querySelector('.filiere-tag').textContent.toLowerCase();
+            const type = card.dataset.type.toLowerCase();
+            
+            const matches = title.includes(searchTerm) || 
+                            filiere.includes(searchTerm) || 
+                            type.includes(searchTerm);
+            
+            card.style.display = matches ? 'block' : 'none';
+        });
     });
-});
+}
 
-// Animation au chargement
+// Fade-in fluide au chargement global du DOM
 window.addEventListener('load', () => {
     document.body.style.opacity = 0;
-    document.body.style.transition = 'opacity 0.5s ease-in';
-    
-    setTimeout(() => {
-        document.body.style.opacity = 1;
-    }, 100);
+    document.body.style.transition = 'opacity 0.4s ease-in';
+    setTimeout(() => { document.body.style.opacity = 1; }, 50);
 });
 </script>
-</body>
-</html>

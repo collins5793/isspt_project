@@ -198,7 +198,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         .main-content {
             flex: 1;
             min-height: 100vh;
-            background: var(--off-white);
+            background: #080020;
             position: relative;
             transition: var(--transition-base);
             margin-left: 0;
